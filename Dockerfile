@@ -55,4 +55,4 @@ ENV PATH=$VIRTUALENV/bin:$PATH
 
 # start application
 USER app
-ENTRYPOINT ["/entrypoint"]
+ENTRYPOINT ["/entrypoint", "--bind=:8080", "--worker-class=uvloop"]

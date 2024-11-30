@@ -1,0 +1,16 @@
+{
+  "name": "enphase_service",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx tsc && node dist/index.js",
+    "package": "rm -rf dist &&npx tsc && docker build -t enphase_service .",
+    "deploy": "docker tag enphase_service:latest 192.168.1.111:5000/enphase_service && docker push 192.168.1.111:5000/enphase_service"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

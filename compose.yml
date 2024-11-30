@@ -1,0 +1,19 @@
+services:
+  enphase_proxy:
+    image: 192.168.1.111:5000/enphase_proxy
+    build: .
+    ports:
+      - "8200:8080"
+
+    environment:
+      ENPHASE_LOCAL_API_URL: https://envoy
+      ENPHASE_REMOTE_API_USERNAME: wingfield.jon@gmail.com
+      ENPHASE_REMOTE_API_PASSWORD: P!e5Fio*wQQta6fp
+      ENPHASE_REMOTE_API_SERIALNO: 202427013646
+      ENPHASE_REMOTE_API_URL:  https://enlighten.enphaseenergy.com/
+      # ENPHASE_LOCAL_API_JWT: see https://github.com/paullockaby/enphase-proxy for details on how to get/save this
+
+
+    
+    
+
