@@ -17,3 +17,9 @@
 .hidden {
     display: none;
 }
+
+.datePickerButton {
+    background-color: #f0f0f0;
+    border: gray 1px solid;
+    padding: 2px 8px;
+}

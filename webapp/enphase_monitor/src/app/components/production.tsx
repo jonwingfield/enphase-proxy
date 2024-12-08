@@ -86,43 +86,52 @@ async function fetchLast12HoursProductionData(): Promise<ChartData> {
     };
 }
 
-async function fetch7DayProductionData(): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
-    const midnightToday = new Date(new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York', timeZoneName: 'short' } ));
-    const midnightSevenDaysAgo = new Date(new Date(midnightToday).setDate(midnightToday.getDate() - 7));
-
+async function fetchMaxDataForDay(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
+    const begin = new Date(new Date(date.getTime()).setHours(23, 0, 0));
+    const end = new Date(new Date(date.getTime()).setHours(23, 59, 0));
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
         db: "solar",
         q: `SELECT max("productionWhToday") as productionWatts, max("consumptionWhToday") as consumptionWatts 
             FROM "solar"."autogen"."rooftop" 
-            WHERE time > '${midnightSevenDaysAgo.toISOString()}' and time < '${midnightToday.toISOString()}'
+            WHERE time > '${begin.toISOString()}' and time < '${end.toISOString()}'
             GROUP BY time(1d)`
     }));
     const data = await response.json();
-    console.log(data);
     return data.results[0].series[0].values.map((point: [string, number, number, number]) => ({
         timestamp: new Date(point[0]),
         productionWatts: point[1],
         consumptionWatts: point[2],
-    }));
+    })).slice(-1);
+
 }
 
-async function fetchYesterdayProductionData(): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number } | undefined> {
-    const oneAmYesterday = new Date(new Date(new Date().setDate(new Date().getDate() - 1)).setHours(1, 0, 0, 0));
-    const currentTimeYesterday = new Date(new Date().setDate(new Date().getDate() - 1));
-    console.log(oneAmYesterday, currentTimeYesterday);
-    
+async function fetch7DayProductionData(): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
+    const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
+
+    const lastSevenDays = [];
+    for (let i = 1; i < 8; i++) {
+        lastSevenDays.push(await fetchMaxDataForDay(new Date(midnightToday.getTime() - (i * 24 * 60 * 60 * 1000))));
+    }
+
+    return lastSevenDays.flat();
+}
+
+async function fetchComparisonFullDayData(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number } | undefined> {
+    const oneAmOnDate = new Date(new Date(new Date(date).setHours(1, 0, 0, 0)));
+    const currentTimeOnDate = new Date(new Date(oneAmOnDate).setHours(new Date().getHours(), new Date().getMinutes()));
+
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
         db: "solar",
         q: `SELECT max("productionWhToday") as productionWatts, max("consumptionWhToday") as consumptionWatts 
             FROM "solar"."autogen"."rooftop" 
-            WHERE time > '${oneAmYesterday.toISOString()}' and time < '${currentTimeYesterday.toISOString()}'`
+            WHERE time > '${oneAmOnDate.toISOString()}' and time < '${currentTimeOnDate.toISOString()}'`
     }));
     const data = await response.json();
-    return data.results[0].series[0].values.map((point: [string, number, number]) => ({
+    return data.results[0].series?.[0]?.values.map((point: [string, number, number]) => ({
         timestamp: new Date(point[0]),
         productionWatts: point[1],
         consumptionWatts: point[2],
-    }))[0];
+    }))[0] ?? undefined;
 } 
 
 async function fetchComparisonData(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
@@ -151,28 +160,28 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
         { title: "Comparison", color: "blue", data: [] }
     ] });
     const [sevenDayData, setSevenDayData] = useState<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]>([]);
-    const [yesterdayData, setYesterdayData] = useState<{ timestamp: Date, productionWatts: number, consumptionWatts: number } | undefined>(undefined);
+    const [comparisonFullDayData, setComparisonFullDayData] = useState<{ timestamp: Date, productionWatts: number, consumptionWatts: number } | undefined>(undefined);
     const autoRefreshRef = useRef<boolean>(autoRefresh);
     const [comparisonDate, setComparisonDate] = useState<Date>(new Date(new Date().setDate(new Date().getDate() - 1)));
     const [comparisonData, setComparisonData] = useState<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]>([]);
 
-    const updateHistoricalData = useCallback(() => {
+    const updateHistoricalData = useCallback((comparisonDate: Date) => {
         fetchLast12HoursProductionData().then(data => {
             setChartData(data);
         });
         fetch7DayProductionData().then(data => {
             setSevenDayData(data);
         });
-        fetchYesterdayProductionData().then(data => {
-            setYesterdayData(data);
+        fetchComparisonFullDayData(comparisonDate).then(data => {
+            setComparisonFullDayData(data);
         });
     }, []);
 
     useEffect(() => { 
         if (autoRefresh) { 
-            updateHistoricalData(); 
+            updateHistoricalData(comparisonDate); 
         } 
-    }, [autoRefresh]);
+    }, [autoRefresh, comparisonDate]);
 
     const sevenDayAverageData = useMemo(() => {
         if (sevenDayData.length === 0) {
@@ -185,6 +194,7 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
         };
     }, [sevenDayData]);
 
+    // Trigger next update when production data (or autoRefresh) changes
     useEffect(() => {
         if (autoRefresh) {
             const timeout = setTimeout(() => updateProductionData(), 1000);
@@ -229,14 +239,18 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
         };
     }, [chartData, comparisonData]);
 
-    console.log(comparisonDate);
-
-    useEffect(() => { updateProductionData(); }, []);
-    
     return <div className={visible ? "" : styles.hidden}>
 
         <div className={styles.datePicker}>
-            Compare to: 
+            &nbsp;
+            Compare to: &nbsp;
+            <button className={styles.datePickerButton}
+                onClick={() => {
+                    const d = new Date(comparisonDate);
+                    d.setDate(d.getDate() - 1);
+                    setComparisonDate(d);
+                }}
+            >&lt;</button>&nbsp;
             <input
                 type="date"
                 onChange={(e) => {
@@ -245,6 +259,15 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
                 }}
                 value={comparisonDate.toISOString().split('T')[0]}
             />
+            &nbsp;
+            <button className={styles.datePickerButton}
+                onClick={() => {
+                    const d = new Date(comparisonDate);
+                    d.setDate(d.getDate() + 1);
+                    setComparisonDate(d);
+                }}
+                disabled={comparisonDate.getTime() >= new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0,0,0,0)}
+            >&gt;</button>
         </div>
         <table className={styles.table}>
             <thead>
@@ -290,12 +313,12 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
                         {((Math.round(productionData?.production?.find(p => p.type === "eim")?.whToday ?? 0) / 1000 * (ratePerKWHOver1000 / 100))).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
                     </td>
                 </tr>
-                {yesterdayData && 
+                {comparisonFullDayData && 
                     <tr>
-                        <td className={styles.item}>Yesterday</td>
-                        <td className={styles.item}>{Math.round(yesterdayData.productionWatts)}</td>
-                        <td className={styles.item}>{Math.round(yesterdayData.consumptionWatts)}</td>
-                        <td className={styles.item}>{Math.round(yesterdayData.consumptionWatts - yesterdayData.productionWatts)}</td>
+                        <td className={styles.item}>{comparisonDate.toLocaleDateString('en-US', { weekday: 'long' })}</td>
+                        <td className={styles.item}>{Math.round(comparisonFullDayData.productionWatts)}</td>
+                        <td className={styles.item}>{Math.round(comparisonFullDayData.consumptionWatts)}</td>
+                        <td className={styles.item}>{Math.round(comparisonFullDayData.consumptionWatts - comparisonFullDayData.productionWatts)}</td>
                     </tr>
                 }
                 {sevenDayAverageData &&
