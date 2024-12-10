@@ -13,34 +13,65 @@ interface PanelData {
 }
 
 // const inverters = [
-//     "542438024668",
-//     "542438022713",
-//     "542438024642",
-//     "542438022684",
-//     "542438022759",
-//     "542438022716",
-//     "542438027239",
-//     "542438024625",
-//     "542438026016",
-//     "542438025685",
-//     "542438024681",
-//     "542438025686",
-//     "542438022781",
-//     "542438022741",
-//     "542438024665",
-//     "542438027317",
-//     "542438022702",
-//     "542438025714",
-//     "542438022643",
-//     "542438022613",
-//     "542438027297",
-//     "542438024755",
-//     "542438026004",
-//     "542438027326",
-//     "542438022786",
-//     "542438024735",
-//     "542438022645",
-// ]
+//     "542436046129",
+//     "542436046159",
+//     "542436046464",
+//     "542436049846",
+//     "542436049873",
+//     "542436051124",
+//     "542436051164",
+//     "542436051661",
+//     "542436052096",
+//     "542436052177",
+//     "542436052667",
+//     "542436052850",
+//     "542436052864",
+//     "542436052878",
+//     "542436052973",
+//     "542436052980",
+//     "542436053006",
+//     "542436053026",
+//     "542436053031",
+//     "542436053289",
+//     "542436053391",
+//     "542436065023",
+//     "542436065082",
+//     "542436065156",
+//     "542436065229",
+//     "542436065662",
+//     "542436066372",
+//     "542436046082"
+// ];
+
+// const inverterMapping = {
+//     "542436049873": "542438022702",
+//     "542436053289": "542438026016",
+//     "542436046082": "542438027239",
+//     "542436065229": "542438022645",
+//     "542436053006": "542438022643",
+//     "542436046129": "542438024668",
+//     "542436052096": "542438022741",
+//     "542436052973": "542438024665",
+//     "542436052177": "542438027317",
+//     "542436052850": "542438024625",
+//     "542436046464": "542438027326",
+//     "542436051661": "542438027297",
+//     "542436052878": "542438024681",
+//     "542436052667": "542438022781",
+//     "542436065156": "542438022759",
+//     "542436049846": "542438024755",
+//     "542436065023": "542438024642",
+//     "542436046159": "542438025714",
+//     "542436052864": "542438024735",
+//     "542436053031": "542438022613",
+//     "542436052980": "542438022684",
+//     "542436053026": "542438022713",
+//     "542436053391": "542438025685",
+//     "542436065662": "542438025686",
+//     "542436065082": "542438026004",
+//     "542436051124": "542438022786",
+//     "542436066372": "542438022716",
+// }
 
 async function fetchPanelData(): Promise<{ [key: string]: PanelData }> {
     const response = await fetch("/enphase_api/api/v1/production/inverters");
@@ -186,17 +217,17 @@ export default function Panels({ autoRefresh = true }: { autoRefresh?: boolean }
 
             {panelData &&
                 <div className={styles.panel}>
-                    <Panel panel={panelData["542438022702"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438022702"} />
-                    <Panel panel={panelData["542438026016"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438026016"} />
-                    <Panel panel={panelData["542438027239"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438027239"} />
+                    <Panel panel={panelData["542436049873"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436049873"} />
+                    <Panel panel={panelData["542436053289"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436053289"} />
+                    <Panel panel={panelData["542436046082"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436046082"} />
                     <div></div>
                     <div></div>
                     <div></div>
                     <div></div>
                     <div></div>
                     <div></div>
-                    <Panel panel={panelData["542438022645"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438022645"} />
-                    <Panel panel={panelData["542438022643"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438022643"} />
+                    <Panel panel={panelData["542436065229"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436065229"} />
+                    <Panel panel={panelData["542436053006"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436053006"} />
                 </div>
             }
             {panelData &&
@@ -204,36 +235,36 @@ export default function Panels({ autoRefresh = true }: { autoRefresh?: boolean }
                 <div className={styles.panel7}>
                     <div></div>
                     <div></div>
-                    <Panel panel={panelData["542438024668"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438024668"} />
-                    <Panel panel={panelData["542438022741"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438022741"} />
-                    <Panel panel={panelData["542438024665"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438024665"} />
-                    <Panel panel={panelData["542438027317"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438027317"} />
+                    <Panel panel={panelData["542436046129"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436046129"} />
+                    <Panel panel={panelData["542436052096"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436052096"} />
+                    <Panel panel={panelData["542436052973"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436052973"} />
+                    <Panel panel={panelData["542436052177"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436052177"} />
                 </div>
                 <div className={styles.panel}>
                     <div></div>
-                    <Panel panel={panelData["542438024625"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438024625"} />
-                    <Panel panel={panelData["542438027326"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438027326"} />
-                    <Panel panel={panelData["542438027297"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438027297"} />
-                    <Panel panel={panelData["542438024681"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438024681"} />
-                    <Panel panel={panelData["542438022781"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438022781"} />
+                    <Panel panel={panelData["542436052850"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436052850"} />
+                    <Panel panel={panelData["542436046464"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436046464"} />
+                    <Panel panel={panelData["542436051661"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436051661"} />
+                    <Panel panel={panelData["542436052878"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436052878"} />
+                    <Panel panel={panelData["542436052667"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436052667"} />
                 </div>
                 <div className={styles.panel7}>
                     <div></div>
-                    <Panel panel={panelData["542438022759"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438022759"} />
-                    <Panel panel={panelData["542438024755"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438024755"} />
-                    <Panel panel={panelData["542438024642"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438024642"} />
-                    <Panel panel={panelData["542438025714"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438025714"} />
-                    <Panel panel={panelData["542438024735"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438024735"} />
-                    <Panel panel={panelData["542438022613"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438022613"} />
+                    <Panel panel={panelData["542436065156"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436065156"} />
+                    <Panel panel={panelData["542436049846"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436049846"} />
+                    <Panel panel={panelData["542436065023"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436065023"} />
+                    <Panel panel={panelData["542436046159"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436046159"} />
+                    <Panel panel={panelData["542436052864"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436052864"} />
+                    <Panel panel={panelData["542436053031"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436053031"} />
                 </div>
                 <div className={styles.panel}>
-                    <Panel panel={panelData["542438022684"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438022684"} />
-                    <Panel panel={panelData["542438022713"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438022713"} />
-                    <Panel panel={panelData["542438025685"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438025685"} />
-                    <Panel panel={panelData["542438025686"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438025686"} />
-                    <Panel panel={panelData["542438026004"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438026004"} />
-                    <Panel panel={panelData["542438022786"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438022786"} />
-                    <Panel panel={panelData["542438022716"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542438022716"} />
+                    <Panel panel={panelData["542436052980"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436052980"} />
+                    <Panel panel={panelData["542436053026"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436053026"} />
+                    <Panel panel={panelData["542436053391"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436053391"} />
+                    <Panel panel={panelData["542436065662"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436065662"} />
+                    <Panel panel={panelData["542436065082"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436065082"} />
+                    <Panel panel={panelData["542436051124"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436051124"} />
+                    <Panel panel={panelData["542436066372"]} onSelect={handlePanelSelect} isSelected={selectedPanelSerialNumber === "542436066372"} />
                 </div>
                 </>
             }
