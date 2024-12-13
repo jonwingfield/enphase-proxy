@@ -5,6 +5,7 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  TimeSeriesScale,
   PointElement,
   LineElement,
   Title,
@@ -13,10 +14,12 @@ import {
 } from 'chart.js';
 import { useMemo, useState } from "react";
 import styles from "./chart.module.css";
+import 'chartjs-adapter-date-fns';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
+  TimeSeriesScale,
   PointElement,
   LineElement,
   Title,
@@ -53,13 +56,13 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
     }, [chartTimeRange, data.series, clearedSeries]);
 
     const chartData = {
-        labels: filteredData[0]?.data.map(d => new Date(d.timestamp).toLocaleTimeString()),
         datasets: filteredData.map(d => ({
             label: d.title,
             data: d.data.map(d => ({ x: new Date(d.timestamp), y: d.value })),
             fill: false,
             borderColor: d.color,
-            tension: 0.1
+            tension: 0.1,
+            cubicInterpolationMode: 'monotone'
         }))
     };
 
@@ -92,7 +95,8 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
                 title: {
                     display: true,
                     text: 'Time'
-                }
+                },
+                type: 'timeseries',
             }
         }
     };
@@ -100,7 +104,7 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
     return (
         <div>
             <div className={styles.chart}>
-                <Line data={chartData} options={{...options, maintainAspectRatio: false}} />
+                <Line data={chartData as any} options={{...options, maintainAspectRatio: false} as any} />
             </div>
             <div style={{marginBottom: '1rem'}}>
                 {data.series.map(s => (
