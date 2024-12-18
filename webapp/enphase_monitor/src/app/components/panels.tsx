@@ -80,6 +80,11 @@ async function fetchPanelData(): Promise<{ [key: string]: PanelData }> {
     });
 }
 
+async function fetchInverterDetailedData(): Promise<InverterDetailedData> {
+    const response = await fetch("/enphase_api/ivp/pdm/device_data");
+    return response.json();
+}
+
 async function fetchHistoricalPanelData(serialNumber: string, date?: Date): Promise<PanelData[]> {
     const startDate = new Date((date ?? new Date()));
     startDate.setUTCHours(0, 0, 0, 0);
@@ -128,7 +133,7 @@ function calculatePanelStats(historicalPanelData: PanelData[]): { wattHours: num
     };
 }
 
-export default function Panels({ autoRefresh = true }: { autoRefresh?: boolean }) {
+export default function Panels({ autoRefresh = true, serialNumber }: { autoRefresh?: boolean, serialNumber?: string }) {
     const [panelData, setPanelData] = useState<{ [key: string]: PanelData } | undefined>(undefined);
     const [historicalPanelData, setHistoricalPanelData] = useState<PanelData[]>([]);
     const [comparisonPanelData, setComparisonPanelData] = useState<PanelData[]>([]);
@@ -206,10 +211,27 @@ export default function Panels({ autoRefresh = true }: { autoRefresh?: boolean }
         };
     }, [historicalPanelData, comparisonPanelData]);
 
+    const [detailedData, setDetailedData] = useState<{ selectedPanelSerialNumber: string, channel: Channel, lastReading: LastReading, wattHours: WattHours, watts: Watts, lifetime: Lifetime } | undefined>(undefined);
+    useEffect(() => {
+        setDetailedData(undefined);
+        if (selectedPanelSerialNumber) {
+            fetchInverterDetailedData().then(data => {
+                const inverterData = data[Object.keys(data).filter(key => (data[key] as Device).sn === selectedPanelSerialNumber)[0]] as Device;
+                if (inverterData) {
+                    const channel = inverterData.channels[0]!;
+                    const lastReading = channel.lastReading!;
+                    const wattHours = channel.wattHours!;
+                    const watts = channel.watts!;
+                    const lifetime = channel.lifetime!;
+
+                    setDetailedData({ selectedPanelSerialNumber, channel, lastReading, wattHours, watts, lifetime });
+                }
+            });
+        } 
+    }, [selectedPanelSerialNumber]);
+
     return (
         <>
-            <h2>Panels</h2>
-
             <div className={styles.datePicker}>
                 <input
                     type="date"
@@ -274,11 +296,58 @@ export default function Panels({ autoRefresh = true }: { autoRefresh?: boolean }
                 </div>
                 </>
             }
+            {panelData && <p>Sum of all panels: {Object.values(panelData).reduce((sum, panel) => sum + panel.lastReportWatts, 0)}W</p>}
             {panelStats &&
                 <p>{panelStats.wattHours} Wh  <em>({Math.round(panelStats.wattHours / 420.0 * 1000) / 1000} Wh/Watt)</em>. Max: {panelStats.maxWatts}W</p>
             }
 
             <Chart data={chartData} defaultTimeRange="1h" />
+
+            {detailedData &&
+                <>
+                    <h3>Inverter Detailed Data ({detailedData.selectedPanelSerialNumber})</h3>
+                    <table>
+                        <tbody>
+                            {Object.keys(detailedData.lastReading).map((key: string) => (
+                                <tr key={key}>
+                                    <td>{key}</td>
+                                    <td>{key.includes("Date") ? new Date(detailedData.lastReading[key as keyof LastReading] as number * 1000).toLocaleString() : detailedData.lastReading[key as keyof LastReading]}</td>
+                                </tr>
+                            ))}
+                            <tr>
+                                <td>AC Watts</td>
+                                <td>{detailedData.lastReading.acVoltageINmV * detailedData.lastReading.acCurrentInmA / 1000000}</td>
+                            </tr>
+                            <tr>
+                                <td>DC Watts</td>
+                                <td>{detailedData.lastReading.dcVoltageINmV * detailedData.lastReading.dcCurrentINmA / 1000000}</td>
+                            </tr>
+                            <tr>
+                                <td>Efficiency</td>
+                                <td>{detailedData.lastReading.acVoltageINmV * detailedData.lastReading.acCurrentInmA / (detailedData.lastReading.dcVoltageINmV * detailedData.lastReading.dcCurrentINmA)}</td>
+                            </tr>
+                            {Object.keys(detailedData.wattHours).map((key: string) => (
+                                <tr key={key}>
+                                    <td>WattHours:{key}</td>
+                                    <td>{detailedData.wattHours[key as keyof WattHours]}</td>
+                                </tr>
+                            ))}
+                            {Object.keys(detailedData.watts).map((key: string) => (
+                                <tr key={key}>
+                                    <td>Watts:{key}</td>
+                                    <td>{detailedData.watts[key as keyof Watts]}</td>
+                                </tr>
+                            ))}
+                            {Object.keys(detailedData.lifetime).map((key: string) => (
+                                <tr key={key}>
+                                    <td>Lifetime:{key}</td>
+                                    <td>{key.includes("Time") ? new Date(detailedData.lifetime[key as keyof Lifetime] as number * 1000).toLocaleString() : detailedData.lifetime[key as keyof Lifetime]}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </>
+            }
         </>
     );
 };
