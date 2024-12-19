@@ -137,7 +137,7 @@ export default function Panels({ autoRefresh = true, serialNumber }: { autoRefre
     const [panelData, setPanelData] = useState<{ [key: string]: PanelData } | undefined>(undefined);
     const [historicalPanelData, setHistoricalPanelData] = useState<PanelData[]>([]);
     const [comparisonPanelData, setComparisonPanelData] = useState<PanelData[]>([]);
-    const [selectedPanelSerialNumber, setSelectedPanelSerialNumber] = useState<string | null>(null);
+    const [selectedPanelSerialNumber, setSelectedPanelSerialNumber] = useState<string | null>(serialNumber ?? null);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date(new Date().setDate(new Date().getDate() - 1)));
 
     const updatePanelData = useCallback(() => {

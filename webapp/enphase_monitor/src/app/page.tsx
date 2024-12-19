@@ -1,18 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from 'next/navigation';
-import Panels from "./components/panels";
-import Production from "./components/production";
 import styles from "./page.module.css";
-import Settings from "./components/settings";
+import { useGlobalState } from "./components/GlobalStateContext";
+import { _capitalize } from "chart.js/helpers";
+import Summary from "./components/summary";
 
 export default function Home() {
-  const searchParams = useSearchParams();
   const [autoRefresh, setAutoRefresh] = useState(true);
-  const [ratePerKWHUnder1000, setRatePerKWHUnder1000] = useState(13.77);
-  const [ratePerKWHOver1000, setRatePerKWHOver1000] = useState(15.74);
-  const [selectedTab, setSelectedTab] = useState(searchParams.get('serialNumber') ? "panels" : "production");
+  const { globalState } = useGlobalState();
 
   useEffect(() => {
     function handleVisibilityChange() {
@@ -28,31 +24,20 @@ export default function Home() {
   }, []);
 
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
+    <>
         <header className={styles.header}>
-            <h1>Enphase Monitor</h1>
-            <button className={`${styles.autoRefreshButton} ${autoRefresh ? styles.active : ""}`} onClick={() => setAutoRefresh(!autoRefresh)}>{autoRefresh ? "Stop" : "Start"} Auto Refresh</button>
+            <div className={styles.headerLeft}>
+                <h1>Powerflow</h1>
+                <h4 className={`status-${globalState.energyState == 'importing' ? 'warning' : 'ok'}`}>{_capitalize(globalState.energyState)}</h4>
+            </div>
+            <div className={styles.headerRight}>
+                <button className={`${styles.autoRefreshButton} ${autoRefresh ? "status-ok" : "status-warning"}`} onClick={() => setAutoRefresh(!autoRefresh)}>{autoRefresh ? "Stop" : "Start"} Auto Refresh</button>
+            </div>
         </header>
 
-        <Production autoRefresh={autoRefresh} visible={selectedTab === "production"}
-            ratePerKWHUnder1000={ratePerKWHUnder1000} ratePerKWHOver1000={ratePerKWHOver1000} />
-        {selectedTab === "panels" && <Panels autoRefresh={autoRefresh} serialNumber={searchParams.get('serialNumber') ?? undefined} />}
-        {selectedTab === "settings" && <Settings ratePerKWHUnder1000={ratePerKWHUnder1000} ratePerKWHOver1000={ratePerKWHOver1000}
-            setRatePerKWHUnder1000={setRatePerKWHUnder1000} setRatePerKWHOver1000={setRatePerKWHOver1000} />}
-      </main>
-      <footer className={styles.footer}>
-        <div>
-            <a href="#" onClick={() => setSelectedTab("production")}>Production</a>
-        </div>
-        <div>
-            <a href="#" onClick={() => setSelectedTab("panels")}>Panels</a>
-        </div>
-        <div>
-            <a href="#" onClick={() => setSelectedTab("settings")}>Settings</a>
-        </div>
-      </footer>
-    </div>
+        <Summary />
+
+    </>
   );
 }
 

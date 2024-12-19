@@ -1,0 +1,112 @@
+.summary {
+    display: block;
+}
+
+.small {
+    text-transform: uppercase;
+}
+
+
+.statusModules {
+    position: relative;
+    width: 100%;
+    height: 700px;
+}
+
+.statusModule {
+    position: absolute;
+    padding: 10px;
+    background-color: var(--background);
+    border-radius: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .statusModule {
+        background-color: rgba(0, 0, 0, 1);
+    }
+}
+
+.solar {
+    right: 168px;
+    top: 323px;
+}
+
+.grid {
+    right: -40px;
+    top: 589px;
+    width: 150px;
+}
+
+.home {
+    right: -64px;
+    top: 426px;
+}
+
+@keyframes flow {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.powerFlowSolar {
+    position: absolute;
+    top: 388px;
+    right: -44px;
+}
+
+.powerFlowGrid {
+    position: absolute;
+    top: 507px;
+    right: -315px;
+}
+
+.powerFlowHome {
+    position: absolute;
+    top: 393px;
+    right: -325px;
+}
+
+@media screen and (max-width: 600px) {
+    .powerFlowSolar {
+        right: -140px;
+    }
+
+    .powerFlowGrid {
+        right: -410px;
+    }
+
+    .powerFlowHome {
+        right: -420px;
+    }
+}
+
+.powerFlowPath {
+    stroke: #646464;
+    stroke-width: 3px;
+    fill: none;
+}
+
+.powerFlow3d {
+    stroke: rgb(35, 35, 35);
+    stroke-width: 3px;
+    fill: none;
+}
+
+.powerFlowGradient {
+    stroke: url(#gradient);
+    stroke-width: 3px;
+    fill: none;
+    /* stroke-dasharray: 100, 100;
+    stroke-dashoffset: 200;
+    animation: flow 2s linear infinite; */
+}
+
+.powerFlowGradient2 {
+    stroke: url(#gradient2);
+    stroke-width: 3px;
+    fill: none;
+    /* stroke-dasharray: 100, 100;
+    stroke-dashoffset: 200;
+    animation: flow 2s linear infinite; */
+}
+

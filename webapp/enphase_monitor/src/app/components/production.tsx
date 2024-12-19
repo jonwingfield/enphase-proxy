@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import styles from "./production.module.css";
 import Chart, { ChartData } from "./chart";
+import { useGlobalState } from "./GlobalStateContext";
 
 interface ProductionData {
     production: {
@@ -164,6 +165,7 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
     const autoRefreshRef = useRef<boolean>(autoRefresh);
     const [comparisonDate, setComparisonDate] = useState<Date>(new Date(new Date().setDate(new Date().getDate() - 1)));
     const [comparisonData, setComparisonData] = useState<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]>([]);
+    const { globalState } = useGlobalState();
 
     const updateHistoricalData = useCallback((comparisonDate: Date) => {
         fetchLast12HoursProductionData().then(data => {
@@ -216,6 +218,7 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
                     { ...chartData.series[1], data: [...chartData.series[1].data, { timestamp: consumptionData.readingTime*1000, value: consumptionData.wNow }] }
                 ]
             }));
+            globalState.energyState = productionData.wNow > consumptionData.wNow ? "exporting" : "importing";
         });
     }, []);
 
