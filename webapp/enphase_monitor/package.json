@@ -12,6 +12,10 @@
     "restart-app": "ssh pi4 -t 'docker pull pi4:5000/enphase_monitor && docker service update --image pi4:5000/enphase_monitor:latest enphase_monitor'"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.2.1",
+    "@mui/material": "^6.2.1",
     "chart.js": "^4.4.6",
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^4.1.0",

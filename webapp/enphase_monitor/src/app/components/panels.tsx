@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import styles from "./panel.module.css";
-import Chart, { ChartData } from "./chart";
-
+import Chart from "./chart";
+import { ChartData } from "@/service/enphaseProduction";
 interface PanelData {
     serialNumber: string;
     lastReportDate: number;

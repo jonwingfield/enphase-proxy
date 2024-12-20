@@ -1,5 +1,6 @@
 .page {
   --gray-rgb: 0, 0, 0;
+  --gray-alpha-500: rgba(var(--gray-rgb), 1.0);
   --gray-alpha-200: rgba(var(--gray-rgb), 0.08);
   --gray-alpha-100: rgba(var(--gray-rgb), 0.05);
 
@@ -19,6 +20,7 @@
 @media (prefers-color-scheme: dark) {
   .page {
     --gray-rgb: 255, 255, 255;
+  --gray-alpha-500: rgba(var(--gray-rgb), 1.0);
     --gray-alpha-200: rgba(var(--gray-rgb), 0.145);
     --gray-alpha-100: rgba(var(--gray-rgb), 0.06);
 
@@ -135,15 +137,23 @@ a.secondary {
 }
 
 .autoRefreshButton {
-    background-color: var(--gray-alpha-200);
+    background-color: var(--gray-alpha-500);
+    /* background-color: rgba(var(--gray-rgb), 0.5); */
     border: none;
     border-radius: 4px;
     padding: 8px 16px;
+    font-weight: bold;
 
     &.active {
         background-color: #00925a;
         color: white;
         font-weight: bold;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .autoRefreshButton {
+    background-color: rgba(0,0,0,0.8);
     }
 }
 
@@ -173,4 +183,10 @@ a.secondary {
 
 h4.charging {
     color: #00d0a6;
+}
+
+.batteryLevelIcon {
+    display: inline-block;
+    margin-bottom: -1px;
+    margin-right: 2px;
 }

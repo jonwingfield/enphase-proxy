@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import styles from "./production.module.css";
-import Chart, { ChartData } from "./chart";
+import Chart from "./chart";
 import { useGlobalState } from "./GlobalStateContext";
+import { ChartData } from "@/service/enphaseProduction";
 
 interface ProductionData {
     production: {
@@ -218,7 +219,6 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
                     { ...chartData.series[1], data: [...chartData.series[1].data, { timestamp: consumptionData.readingTime*1000, value: consumptionData.wNow }] }
                 ]
             }));
-            globalState.energyState = productionData.wNow > consumptionData.wNow ? "exporting" : "importing";
         });
     }, []);
 

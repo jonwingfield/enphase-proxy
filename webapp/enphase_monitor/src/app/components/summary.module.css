@@ -4,6 +4,11 @@
 
 .small {
     text-transform: uppercase;
+    font-size: 11px;
+    color: var(--gray-alpha-500);
+    /* margin-top: -2px; */
+    display: block;
+    font-weight: 500;
 }
 
 
@@ -17,6 +22,7 @@
     position: absolute;
     padding: 10px;
     background-color: var(--background);
+    opacity: 0.8;
     border-radius: 10px;
 }
 
@@ -32,14 +38,29 @@
 }
 
 .grid {
-    right: -40px;
+    right: 60px;
     top: 589px;
-    width: 150px;
 }
 
 .home {
     right: -64px;
     top: 426px;
+}
+
+.weather {
+    right: 30px;
+    top: 0px;
+}
+
+.powerwall {
+    right: 60px;
+    top: 589px;
+}
+
+.tesla {
+    right: 360px;
+    top: 489px;
+    width: 140px;
 }
 
 @keyframes flow {
@@ -66,17 +87,57 @@
     right: -325px;
 }
 
+.powerFlowTesla {
+    position: absolute;
+    top: 665px;
+    right: 243px;
+}
+
 @media screen and (max-width: 600px) {
+    .solar {
+        top: 163px;
+    }
+
     .powerFlowSolar {
-        right: -140px;
+        right: -35px;
+        top: 201px;
+        transform: scaleY(0.53);
+    }
+
+    .grid {
+        top: 389px;
+        right: 63px;
+    }
+
+    .powerwall {
+        top: 359px;
+        right: 63px;
     }
 
     .powerFlowGrid {
-        right: -410px;
+        top: 315px;
+        right: -287px;
+    }
+
+    .home {
+        top: 226px;
+        right: -25px;
+        width: 100px;
     }
 
     .powerFlowHome {
-        right: -420px;
+        right: -292px;
+        top: 203px;
+    }
+
+    .tesla {
+        top: 265px;
+        right: 243px;
+
+    }
+    .powerFlowTesla {
+        right: -5px;
+        top: 315px;
     }
 }
 
@@ -96,17 +157,56 @@
     stroke: url(#gradient);
     stroke-width: 3px;
     fill: none;
-    /* stroke-dasharray: 100, 100;
-    stroke-dashoffset: 200;
-    animation: flow 2s linear infinite; */
+}
+
+.powerFlowGradientGrid {
+    stroke: url(#gradientGrid);
+    stroke-width: 3px;
+    fill: none;
+}
+
+.powerFlowGradientExport {
+    stroke: url(#gradientExport);
+    stroke-width: 3px;
+    fill: none;
 }
 
 .powerFlowGradient2 {
     stroke: url(#gradient2);
     stroke-width: 3px;
     fill: none;
-    /* stroke-dasharray: 100, 100;
-    stroke-dashoffset: 200;
-    animation: flow 2s linear infinite; */
+}
+
+.powerFlowGradientImport {
+    stroke: url(#gradientImport);
+    stroke-width: 3px;
+    fill: none;
+}
+
+.powerFlowPathTesla {
+    stroke: #646464;
+    stroke-width: 2px;
+    fill: none;
+}
+
+.powerFlowGradientTesla {
+    stroke: url(#gradientTesla);
+    stroke-width: 2px;
+    fill: none;
+}
+
+.weatherAlert {
+    color: #ff0707;
+
+    svg.weatherAlertIcon {
+        display: inline-block;
+        margin-bottom: -2px;
+    }
+}
+
+.batteryLevelIcon {
+    display: inline-block;
+    margin-bottom: -1px;
+    margin-right: 2px;
 }
 

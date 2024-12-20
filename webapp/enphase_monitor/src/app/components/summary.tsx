@@ -1,7 +1,35 @@
 
+import { useEffect, useState } from "react";
+import { useGlobalState } from "./GlobalStateContext";
 import styles from "./summary.module.css";
+import { formatWatt, useProduction } from "./useProduction";
+import { isWeatherAlert, useWeather } from "./useWeather";
+import { WarningAmber } from "@mui/icons-material";
+import { useTesla } from "./useTesla";
+import { capitalize } from "@mui/material";
 
 export default function Summary() {
+    const { homeProductionData, officeProductionData } = useProduction();
+    const { weather } = useWeather();
+    const { tesla } = useTesla();
+    const { globalState, setGlobalState } = useGlobalState();
+    const [individualVoltage, setIndividualVoltage] = useState(true);
+
+    const productionData = globalState.source === "home" ? homeProductionData : officeProductionData;
+
+    const solar = productionData && productionData.panel_watts > 0;
+    const importingAmount = productionData ? productionData.load_watts - productionData.panel_watts : 0;
+    const importing = importingAmount > 0;
+    const exporting = !importing;
+    const energyState = productionData ? (globalState.source === "home" ? 
+        (importing ? "importing" : "exporting") : 
+        (importing ? "discharging" : "charging")) : "idle";
+    const batt_percent = productionData && 'batt_percent' in productionData ? Math.round(productionData.batt_percent) : 0;
+
+    useEffect(() => {
+        setGlobalState(globalState => ({ ...globalState, energyState, batt_percent, weather }));
+    }, [energyState, batt_percent, weather]);
+
     return (
         <main className={styles.summary}>
             <div className={styles.statusModules}>
@@ -16,52 +44,134 @@ export default function Summary() {
                             <animate attributeName="y2" values="0%;200%;" dur="2s" repeatCount="indefinite" />
                         </linearGradient>
                     </defs>
-                    <path className={styles.powerFlow3d} d="M 6 4 Q 27 20, 27 50 L 27 120" />
-                    <path className={styles.powerFlowPath} d="M 8 3 Q 30 20, 30 50 L 30 119" stroke-linecap="round" />
-                    <path className={styles.powerFlowGradient} d="M 8 3 Q 30 20, 30 50 L 30 119" stroke-linecap="round" />
+                    <path className={styles.powerFlow3d} d="M 6 4 Q 28 20, 28 50 L 28 120" />
+                    <path className={styles.powerFlowPath} d="M 8 3 Q 30 20, 30 50 L 30 119" strokeLinecap="round" />
+                    {solar && <path className={styles.powerFlowGradient} d="M 8 3 Q 30 20, 30 50 L 30 119" strokeLinecap="round" />}
                 </svg>
-                <div className={`${styles.statusModule} ${styles.solar}`}>
-                    <h5>4.5 kW</h5>
+                {productionData && <div className={`${styles.statusModule} ${styles.solar}`}>
+                    <h5>{productionData.panel_watts > 0 ? formatWatt(productionData.panel_watts) : "--"} &middot; {formatWatt(productionData.panel_wh)}h</h5>
                     <small className={styles.small}>Solar</small>
-                </div>
+                </div>}
                 <svg width="400" height="210" className={styles.powerFlowHome}>
                     <defs>
                         <linearGradient id="gradient2" x1="-100%" y1="0%" x2="0%" y2="-25%">
                             <stop offset="0%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
                             <stop offset="25%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
-                            <stop offset="99%" style={{ stopColor: "yellow", stopOpacity: 1 }} />
+                            <stop offset="99%" style={{ stopColor: solar ? "yellow" : (globalState.source === 'home' ? "#646464" : "#00d0a6"), stopOpacity: 1 }} />
+                            <stop offset="100%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                            <animate attributeName="x1" values="-100%;100%;" dur="2s" repeatCount="indefinite" />
+                            <animate attributeName="x2" values="0%;200%;" dur="2s" repeatCount="indefinite" />
+                        </linearGradient>
+                        <linearGradient id="gradientGrid" x1="-100%" y1="0%" x2="0%" y2="-25%">
+                            <stop offset="0%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                            <stop offset="25%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                            <stop offset="99%" style={{ stopColor: globalState.source === "home" ? "#a6a6a6" : "#00d0a6", stopOpacity: 1 }} />
                             <stop offset="100%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
                             <animate attributeName="x1" values="-100%;100%;" dur="2s" repeatCount="indefinite" />
                             <animate attributeName="x2" values="0%;200%;" dur="2s" repeatCount="indefinite" />
                         </linearGradient>
                     </defs>
-                    <path className={styles.powerFlow3d} d="M 9 103 L 100 65" stroke-linecap="round" />
-                    <path className={styles.powerFlowPath} d="M 8 100 L 100 62" stroke-linecap="round" />
+                    <path className={styles.powerFlow3d} d="M 8 101 L 100 63" strokeLinecap="round" />
+                    <path className={styles.powerFlowPath} d="M 8 100 L 100 62" strokeLinecap="round" />
                     <path className={styles.powerFlowGradient2} d="M 8 100 L 100 62" />
+                    {solar && importing &&
+                        <>
+                            <path className={styles.powerFlow3d} d="M 8 108 L 100 70" strokeLinecap="round" />
+                            <path className={styles.powerFlowPath} d="M 8 107 L 100 69" strokeLinecap="round" />
+                            <path className={styles.powerFlowGradientGrid} d="M 8 107 L 100 69" />
+                        </>
+                    }
                 </svg>
-                <div className={`${styles.statusModule} ${styles.home}`}>
-                    <h5>1.3 kW</h5>
-                    <small className={styles.small}>Home</small>
-                </div>
-                <svg width="400" height="210" className={styles.powerFlowGrid}>
-                    <defs>
-                        <linearGradient id="gradient" x1="-100%" y1="-100%" x2="0%" y2="0%">
-                            <stop offset="0%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
-                            <stop offset="25%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
-                            <stop offset="99%" style={{ stopColor: "yellow", stopOpacity: 1 }} />
-                            <stop offset="100%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
-                            <animate attributeName="y1" values="-100%;100%;" dur="2s" repeatCount="indefinite" />
-                            <animate attributeName="y2" values="0%;200%;" dur="2s" repeatCount="indefinite" />
-                        </linearGradient>
-                    </defs>
-                    <path className={styles.powerFlow3d} d="M 5 3 L 5 30 Q 8 45, 17 50 L 297 200" />
-                    <path className={styles.powerFlowPath} d="M 8 3 L 8 30 Q 8 40, 20 50 L 300 200" />
-                    <path className={styles.powerFlowGradient} d="M 8 3 L 8 30 Q 8 40, 20 50 L 300 200" />
-                </svg>
-                <div className={`${styles.statusModule} ${styles.grid}`}>
-                    <h5>1.3 kW</h5>
-                    <small className={styles.small}>Grid</small>
-                </div>
+                {productionData && <div className={`${styles.statusModule} ${styles.home}`}>
+                    <h5>{formatWatt(productionData.load_watts)} &middot; {formatWatt(productionData.load_wh)}h</h5>
+                    <small className={styles.small}>{capitalize(globalState.source)}</small>
+                </div>}
+                {productionData && ('grid_wh' in productionData) &&
+                <>
+                    <svg width="400" height="210" className={styles.powerFlowGrid}>
+                        <defs>
+                            <linearGradient id="gradientExport" x1="-100%" y1="-100%" x2="0%" y2="0%">
+                                <stop offset="0%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                                <stop offset="25%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                                <stop offset="99%" style={{ stopColor: "yellow", stopOpacity: 1 }} />
+                                <stop offset="100%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                                <animate attributeName="y1" values="-100%;100%;" dur="2s" repeatCount="indefinite" />
+                                <animate attributeName="y2" values="0%;200%;" dur="2s" repeatCount="indefinite" />
+                            </linearGradient>
+                        </defs>
+                        <defs>
+                            <linearGradient id="gradientImport" x1="0%" y1="100%" x2="0%" y2="0%">
+                                <stop offset="0%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                                <stop offset="25%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                                <stop offset="99%" style={{ stopColor: "#a6a6a6", stopOpacity: 1 }} />
+                                <stop offset="100%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                                <animate attributeName="y1" values="200%;0%;" dur="2s" repeatCount="indefinite" />
+                                <animate attributeName="y2" values="100%;-100%;" dur="2s" repeatCount="indefinite" />
+                            </linearGradient>
+                        </defs>
+                        <path className={styles.powerFlow3d} d="M 5 3 L 5 30 Q 8 45, 17 50 L 297 200" />
+                        <path className={styles.powerFlowPath} d="M 8 3 L 8 30 Q 8 40, 20 50 L 300 200" />
+                        {exporting && <path className={styles.powerFlowGradientExport} d="M 8 3 L 8 30 Q 8 40, 20 50 L 300 200" />}
+                        {importing && <path className={styles.powerFlowGradientImport} d="M 8 3 L 8 30 Q 8 40, 20 50 L 300 200" />}
+                    </svg>
+
+                    <div className={`${styles.statusModule} ${styles.grid}`}>
+                        <h5>{formatWatt(productionData.grid_watts)} &middot; {formatWatt(productionData.grid_wh)}h</h5>
+                        <small className={styles.small}>Grid</small>
+                    </div>
+                </>
+                }
+                {globalState.source === "office" && officeProductionData &&
+                    <div className={`${styles.statusModule} ${styles.powerwall}`} onClick={() => setIndividualVoltage(i => !i)}>
+                        <h5>{formatWatt(-officeProductionData.batt_watts)} &middot; {formatWatt(officeProductionData.batt_wh)}h</h5>
+                        <h5>{Math.round(officeProductionData.batt_percent)}% &middot; {(officeProductionData.batt_v / (individualVoltage ? 4 : 1)).toFixed(2)}V</h5>
+                        <small className={styles.small}>Powerwall</small>
+                    </div>
+                }
+                {weather && <div className={`${styles.statusModule} ${styles.weather}`}>
+                    <h5 className={isWeatherAlert(weather) ? styles.weatherAlert : undefined}>
+                        {weather.tempf.toFixed(0)}°F&nbsp;
+                        {isWeatherAlert(weather) && (
+                            <WarningAmber fontSize="inherit" className={styles.weatherAlertIcon} />
+                        )}
+                    </h5>
+                    <h5 className={styles.weatherTempRange}>{weather.minTempf.toFixed(0)}°F - {weather.maxTempf.toFixed(0)}°F</h5>
+                    <small className={styles.small}>Greenhouse</small>
+                </div>}
+                {tesla &&
+                <>
+                    <svg width="200" height="210" className={styles.powerFlowTesla}>
+                        <defs>
+                            <linearGradient id="gradientTesla" x1="100%" y1="0%" x2="0%" y2="0%">
+                                <stop offset="0%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                                <stop offset="25%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                                <stop offset="80%" style={{ stopColor: "#ffffff", stopOpacity: 1 }} />
+                                <stop offset="100%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
+                                <animate attributeName="x1" values="200%;0%;" dur="2s" repeatCount="indefinite" />
+                                <animate attributeName="x2" values="100%;-100%;" dur="2s" repeatCount="indefinite" />
+                            </linearGradient>
+                        </defs>
+                        <path className={styles.powerFlowPathTesla} d="M 30 10 Q 25 56, 5 3" strokeLinecap="round" />
+                        {tesla.charge_rate > 0 && <path className={styles.powerFlowGradientTesla} d="M 30 10 Q 23 56, 5 3" strokeLinecap="round" />}
+                        {/* {tesla.charge_rate > 0 && <path className={styles.powerFlowGradientTesla} d="M 8 3 Q 30 20, 30 50 L 30 119" strokeLinecap="round" />} */}
+                    </svg>
+
+
+                    <div className={`${styles.statusModule} ${styles.tesla}`}>
+                        <h5>{(tesla.charger_actual_current * tesla.charger_voltage / 1000).toFixed(1)}kW &middot; {tesla.charge_rate}mi/hr</h5>
+                        <h5>
+                            <svg width="24" height="12" viewBox="0 0 24 12" className={styles.batteryLevelIcon}>
+                                <rect x="0" y="1" width="20" height="10" rx="2" ry="2" fill="currentColor" stroke="currentColor" strokeWidth="1" />
+                              <rect x="21" y="3" width="1" height="6" fill="currentColor" />
+                              <rect x="21" y="3" width="2" height="6" rx="2" ry="2" fill="currentColor" />
+                              <rect x="1" y="2" width={`${tesla.battery_level * 16 / 100}`} height="8" rx="1.5" ry="1.5" fill="#00d0a6" />
+                          </svg>
+                          {tesla.battery_level}%
+                        </h5>
+                        <small className={styles.small}>Tesla</small>
+                    </div>
+                </>
+                }
             </div>
         </main>
     );

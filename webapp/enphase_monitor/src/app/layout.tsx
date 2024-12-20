@@ -30,11 +30,16 @@ export default function RootLayout({
             <body className={`${geistSans.variable} ${geistMono.variable}`}>
                 <GlobalStateProvider>
                     <div className="page">
-                        <picture>
-                            <source srcSet="/powerflow-light.png" type="image/png" media="(prefers-color-scheme: light)" />
-                            <source srcSet="/powerflow-dark.png" type="image/png" media="(prefers-color-scheme: dark)" />
-                            <img src="/powerflow-light.png" alt="Powerflow" />
-                        </picture>
+                        <div className="picture">
+                            <picture>
+                                <source srcSet="/powerflow-light.png" type="image/png" media="(prefers-color-scheme: light)" />
+                                <source srcSet="/powerflow-dark.png" type="image/png" media="(prefers-color-scheme: dark)" />
+                                <img src="/powerflow-light.png" alt="Powerflow" />
+                            </picture>
+                            <div className="fade">
+
+                            </div>
+                        </div>
                         <main>
                             {children}
                         </main>

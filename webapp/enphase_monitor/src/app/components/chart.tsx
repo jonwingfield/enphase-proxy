@@ -15,6 +15,7 @@ import {
 import { useMemo, useState } from "react";
 import styles from "./chart.module.css";
 import 'chartjs-adapter-date-fns';
+import { ChartData } from "@/service/enphaseProduction";
 
 ChartJS.register(
   CategoryScale,
@@ -26,17 +27,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
-export interface ChartData {
-    series: {
-        title: string;
-        color: string;
-        data: {
-            timestamp: number;
-            value: number;
-        }[];
-    }[];
-}
 
 type ChartTimeRange = "1h" | "2h" | "3h" | "6h" | "12h";
 const ChartTimeRanges: ChartTimeRange[] = ["1h", "2h", "3h", "6h", "12h"];
