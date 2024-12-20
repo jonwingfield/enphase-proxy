@@ -3,14 +3,20 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "npx tsc && node dist/index.js",
-    "package": "rm -rf dist &&npx tsc && docker build -t enphase_service .",
-    "deploy": "docker tag enphase_service:latest 192.168.1.111:5000/enphase_service && docker push 192.168.1.111:5000/enphase_service"
+    "start": "ts-node src/index.ts",
+    "package": "rm -rf dist && tsc && docker build -t enphase_service .",
+    "deploy": "docker tag enphase_service:latest 192.168.1.111:5000/enphase_service && docker push 192.168.1.111:5000/enphase_service",
+    "restart-app": "ssh pi4 -t 'docker pull pi4:5000/enphase_service && docker service update --image pi4:5000/enphase_service:latest enphase_service'"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/node": "^22.10.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@api/tessie": "file:.api/apis/tessie"
   }
 }
