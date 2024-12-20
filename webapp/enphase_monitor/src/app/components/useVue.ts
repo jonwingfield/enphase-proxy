@@ -1,11 +1,13 @@
-import { getVueProduction, VueProductionData } from "@/service/vue";
+import { getVueProduction, getVueProductionKwh, VueProductionData } from "@/service/vue";
 import { useEffect, useState } from "react";
 
 export function useVue() {
     const [vue, setVue] = useState<VueProductionData[] | null>(null);
+    const [vueKwh, setVueKwh] = useState<VueProductionData[] | null>(null);
 
     useEffect(() => {
         getVueProduction().then(setVue);
+        getVueProductionKwh().then(setVueKwh);
     }, []);
 
     useEffect(() => {
@@ -13,8 +15,16 @@ export function useVue() {
         return () => clearTimeout(timeout);
     }, [vue]);
 
+    useEffect(() => {
+        const timeout = setTimeout(() => getVueProductionKwh().then(setVueKwh), 5*60*1000 /* 5 minutes */);
+        return () => clearTimeout(timeout);
+    }, [vueKwh]);
+
+    console.log(vueKwh);
+
     return {
         vue,
+        vueKwh,
     };
 }
 

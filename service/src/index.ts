@@ -368,7 +368,7 @@ async function fetchAndPostData() {
         postTeslaStateToInfluxDB(state);
     });
     
-    if (requestCount % 60 === 0) {
+    if (requestCount % 30 === 0) {
         console.log("Fetching Tesla charge data");
         fetchTeslaChargeData(24*30).then(data => {
             postTeslaChargeDataToInfluxDB(data);

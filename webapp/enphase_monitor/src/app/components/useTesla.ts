@@ -1,4 +1,4 @@
-import { TeslaState } from "@/service/tesla";
+import { getTeslaChargesToday, TeslaState } from "@/service/tesla";
 
 import { useState } from "react";
 
@@ -7,9 +7,11 @@ import { useEffect } from "react";
 
 export function useTesla() {
     const [tesla, setTesla] = useState<TeslaState | null>(null);
+    const [teslaChargesToday, setTeslaChargesToday] = useState<number | null>(null);
 
     useEffect(() => {
         getTeslaState().then(setTesla);
+        getTeslaChargesToday().then(setTeslaChargesToday);
     }, []);
 
     useEffect(() => {
@@ -17,7 +19,13 @@ export function useTesla() {
         return () => clearTimeout(timeout);
     }, [tesla]);
 
+    useEffect(() => {
+        const timeout = setTimeout(() => getTeslaChargesToday().then(setTeslaChargesToday), 5*60*1000 /* 5 minutes */);
+        return () => clearTimeout(timeout);
+    }, [teslaChargesToday]);
+
     return {
         tesla,
+        teslaChargesToday,
     };
 }

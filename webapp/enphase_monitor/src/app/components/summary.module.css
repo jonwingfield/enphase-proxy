@@ -257,7 +257,7 @@
 }
 
 .homeDetailsTable {
-    border: 1px solid var(--gray-alpha-500);
+    border: 2px solid var(--gray-alpha-500);
     border-radius: 10px;
     margin-top: 1rem;
 }
@@ -265,12 +265,24 @@
 .homeDetailsTableHeader {
     text-align: left;
     font-weight: 700;
-    border-bottom: 1px solid var(--gray-alpha-500);
+    border-bottom: 2px solid var(--gray-alpha-500);
     padding: 0.25rem 1rem;
 }
 
 .homeDetailsTableCell {
     text-align: left;
-    padding: 0.25rem 1rem;
+    padding: 0.5rem 1rem;
+    border-bottom: 2px solid var(--gray-alpha-500);
+    color: var(--gray-alpha-500);
 }
+
+.homeDetailsTableCellDevice {
+    font-weight: 700;
+    color: var(--foreground);
+}
+
+.homeDetailsTableRow:last-child .homeDetailsTableCell {
+    border-bottom: none;
+}
+
 

@@ -12,8 +12,8 @@ import { calculateGreenhouseUsage, useVue } from "./useVue";
 export default function Summary() {
     const { homeProductionData, officeProductionData } = useProduction();
     const { weather } = useWeather();
-    const { tesla } = useTesla();
-    const { vue } = useVue();
+    const { tesla, teslaChargesToday } = useTesla();
+    const { vue, vueKwh } = useVue();
     const { globalState, setGlobalState } = useGlobalState();
     const [individualVoltage, setIndividualVoltage] = useState(true);
     const [showHome, setShowHome] = useState(false);
@@ -38,7 +38,7 @@ export default function Summary() {
             } else {
                 teslaState = 'notHome';
             }
-        } else if (tesla.charging_state === 'Connected') {
+        } else if (tesla.charging_state === 'Stopped') {
             teslaState = 'pluggedIn';
         } else {
             teslaState = 'unplugged';
@@ -46,6 +46,8 @@ export default function Summary() {
     } else {
         teslaState = 'unplugged';
     }
+
+    console.log(teslaState, tesla);
 
     useEffect(() => {
         setGlobalState(globalState => ({ ...globalState, energyState, batt_percent, weather, teslaState }));
@@ -157,7 +159,7 @@ export default function Summary() {
                         )}
                     </h5>
                     <h5 className={styles.weatherTempRange}>{weather.minTempf.toFixed(0)}°F - {weather.maxTempf.toFixed(0)}°F</h5>
-                    {vue && <h5>{calculateGreenhouseUsage(vue)?.toFixed(0)}W</h5>}
+                    {vue && <h5>{formatWatt(calculateGreenhouseUsage(vue) ?? 0)} &middot; {formatWatt(calculateGreenhouseUsage(vueKwh) ?? 0)}h</h5>}
                     <small className={styles.small}>Greenhouse</small>
                 </div>}
                 {tesla &&
@@ -188,7 +190,7 @@ export default function Summary() {
                               <rect x="21" y="3" width="2" height="6" rx="2" ry="2" fill="currentColor" />
                               <rect x="1" y="2" width={`${tesla.battery_level * 16 / 100}`} height="8" rx="1.5" ry="1.5" fill="#00d0a6" />
                           </svg>
-                          {tesla.battery_level}%
+                          {tesla.battery_level}% &middot; {formatWatt(teslaChargesToday ?? 0)}h
                         </h5>
                         <small className={styles.small}>Tesla</small>
                     </div>
@@ -205,16 +207,11 @@ export default function Summary() {
                     </div>
                     <div className={styles.homeDetailsBody}>
                         <table className={styles.homeDetailsTable} cellPadding={0} cellSpacing={0}>
-                            <thead>
-                                <tr>
-                                    <th className={styles.homeDetailsTableHeader}>Device</th>
-                                    <th className={styles.homeDetailsTableHeader}>Usage</th>
-                                </tr>
-                            </thead>
                             <tbody>
-                                {vue.map(v => <tr key={v.device_name}>
-                                    <td className={styles.homeDetailsTableCell}>{v.device_name}</td>
+                                {vue.map(v => <tr key={v.device_name} className={styles.homeDetailsTableRow}>
+                                    <td className={`${styles.homeDetailsTableCell} ${styles.homeDetailsTableCellDevice}`}>{v.device_name}</td>
                                     <td className={styles.homeDetailsTableCell}>{formatWatt(v.usage)}</td>
+                                    <td className={styles.homeDetailsTableCell}>{formatWatt(vueKwh?.find(k => k.device_name === v.device_name)?.usage ?? 0)}h</td>
                                 </tr>)}
                             </tbody>
                         </table>

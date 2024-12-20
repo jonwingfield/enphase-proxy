@@ -69,3 +69,15 @@ export async function getTeslaState(): Promise<TeslaState | null> {
 
     return result;
 }
+
+export async function getTeslaChargesToday(): Promise<number | null> {
+    const startOfDay = new Date().setHours(0, 0, 0, 0);
+    const response = await fetch("/influxdb/query?" + new URLSearchParams({
+        db: "tesla",
+        q: `SELECT sum("energy_used") AS "sum_energy_used" 
+            FROM "tesla"."autogen"."charge" 
+            WHERE time > ${startOfDay * 1000 * 1000}`
+    }));
+    const data = await response.json();
+    return (data?.results[0]?.series?.length ? data.results[0].series[0].values[0][1] : 0) * 1000;
+}
