@@ -2,7 +2,7 @@ export interface TeslaState {
     state: string;
     battery_level: number;
     charger_power: number;
-    charging_state: string;
+    charging_state: "Charging" | "Disconnected" | "Connected" | "Starting" | "Stopped" | "Pending" | "Error";
     charger_actual_current: number;
     charger_voltage: number;
     charge_limit_soc: number;
@@ -15,6 +15,7 @@ export interface TeslaState {
     longitude: number;
     odometer: number;
     speed: number;
+    location: 'home' | 'away';
 }
 
 export async function getTeslaState(): Promise<TeslaState | null> {
@@ -37,10 +38,11 @@ export async function getTeslaState(): Promise<TeslaState | null> {
                     last("odometer") as odometer, 
                     last("speed") as speed 
             FROM "tesla"."autogen"."state"
-            WHERE time > now() - 3m`
+            WHERE time > now() - 12h`
     }));
     const data = await response.json();
-    return data?.results[0]?.series[0].values[0] ? {
+    
+    const result = data?.results[0]?.series?.length ? {
         state: data.results[0].series[0].values[0][1],
         battery_level: data.results[0].series[0].values[0][2],
         charger_power: data.results[0].series[0].values[0][3],
@@ -57,5 +59,13 @@ export async function getTeslaState(): Promise<TeslaState | null> {
         longitude: data.results[0].series[0].values[0][14],
         odometer: data.results[0].series[0].values[0][15],
         speed: data.results[0].series[0].values[0][16],
+        location: 'home'
     } as TeslaState : null;
+
+    if (result) {
+        /* 28.520249, -82.34597 is home */
+        result.location = Math.abs(result.latitude - 28.520) < 0.01 && Math.abs(result.longitude - -82.346) < 0.01 ? 'home' : 'away';
+    }
+
+    return result;
 }

@@ -11,6 +11,7 @@ export interface GlobalState {
     energyState: "importing" | "exporting" | "idle" | "charging" | "discharging";
     source: "home" | "office";
     batt_percent: number;
+    teslaState: 'pluggedIn' | 'charging' | 'unplugged' | 'notHome';
 }
 
 const DefaultGlobalState: GlobalState = {
@@ -21,6 +22,7 @@ const DefaultGlobalState: GlobalState = {
     energyState: "idle",
     source: "home",
     batt_percent: 0,
+    teslaState: 'unplugged',
 };
 
 export const GlobalStateContext = createContext<{

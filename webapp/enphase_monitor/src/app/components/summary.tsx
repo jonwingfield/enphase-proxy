@@ -7,13 +7,16 @@ import { isWeatherAlert, useWeather } from "./useWeather";
 import { WarningAmber } from "@mui/icons-material";
 import { useTesla } from "./useTesla";
 import { capitalize } from "@mui/material";
+import { calculateGreenhouseUsage, useVue } from "./useVue";
 
 export default function Summary() {
     const { homeProductionData, officeProductionData } = useProduction();
     const { weather } = useWeather();
     const { tesla } = useTesla();
+    const { vue } = useVue();
     const { globalState, setGlobalState } = useGlobalState();
     const [individualVoltage, setIndividualVoltage] = useState(true);
+    const [showHome, setShowHome] = useState(false);
 
     const productionData = globalState.source === "home" ? homeProductionData : officeProductionData;
 
@@ -25,10 +28,28 @@ export default function Summary() {
         (importing ? "importing" : "exporting") : 
         (importing ? "discharging" : "charging")) : "idle";
     const batt_percent = productionData && 'batt_percent' in productionData ? Math.round(productionData.batt_percent) : 0;
+    let teslaState: typeof globalState['teslaState'];
+    if (tesla) {
+        if (tesla.charging_state === 'Charging') {
+            teslaState = 'charging';
+        } else if (tesla.charging_state === 'Disconnected') {
+            if (tesla.location === 'home') {
+                teslaState = 'unplugged';
+            } else {
+                teslaState = 'notHome';
+            }
+        } else if (tesla.charging_state === 'Connected') {
+            teslaState = 'pluggedIn';
+        } else {
+            teslaState = 'unplugged';
+        }
+    } else {
+        teslaState = 'unplugged';
+    }
 
     useEffect(() => {
-        setGlobalState(globalState => ({ ...globalState, energyState, batt_percent, weather }));
-    }, [energyState, batt_percent, weather]);
+        setGlobalState(globalState => ({ ...globalState, energyState, batt_percent, weather, teslaState }));
+    }, [energyState, batt_percent, weather, teslaState, setGlobalState]);
 
     return (
         <main className={styles.summary}>
@@ -82,7 +103,7 @@ export default function Summary() {
                         </>
                     }
                 </svg>
-                {productionData && <div className={`${styles.statusModule} ${styles.home}`}>
+                {productionData && <div className={`${styles.statusModule} ${styles.home}`} onClick={() => setShowHome(true)}>
                     <h5>{formatWatt(productionData.load_watts)} &middot; {formatWatt(productionData.load_wh)}h</h5>
                     <small className={styles.small}>{capitalize(globalState.source)}</small>
                 </div>}
@@ -122,7 +143,7 @@ export default function Summary() {
                 </>
                 }
                 {globalState.source === "office" && officeProductionData &&
-                    <div className={`${styles.statusModule} ${styles.powerwall}`} onClick={() => setIndividualVoltage(i => !i)}>
+                    <div className={`${styles.statusModule} ${styles.powerwall}`} onClick={() => setIndividualVoltage(i => !i)} role="button">
                         <h5>{formatWatt(-officeProductionData.batt_watts)} &middot; {formatWatt(officeProductionData.batt_wh)}h</h5>
                         <h5>{Math.round(officeProductionData.batt_percent)}% &middot; {(officeProductionData.batt_v / (individualVoltage ? 4 : 1)).toFixed(2)}V</h5>
                         <small className={styles.small}>Powerwall</small>
@@ -136,11 +157,12 @@ export default function Summary() {
                         )}
                     </h5>
                     <h5 className={styles.weatherTempRange}>{weather.minTempf.toFixed(0)}°F - {weather.maxTempf.toFixed(0)}°F</h5>
+                    {vue && <h5>{calculateGreenhouseUsage(vue)?.toFixed(0)}W</h5>}
                     <small className={styles.small}>Greenhouse</small>
                 </div>}
                 {tesla &&
                 <>
-                    <svg width="200" height="210" className={styles.powerFlowTesla}>
+                    {(teslaState === 'pluggedIn' || teslaState === 'charging') && <svg width="60" height="60" className={styles.powerFlowTesla}>
                         <defs>
                             <linearGradient id="gradientTesla" x1="100%" y1="0%" x2="0%" y2="0%">
                                 <stop offset="0%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
@@ -155,10 +177,10 @@ export default function Summary() {
                         {tesla.charge_rate > 0 && <path className={styles.powerFlowGradientTesla} d="M 30 10 Q 23 56, 5 3" strokeLinecap="round" />}
                         {/* {tesla.charge_rate > 0 && <path className={styles.powerFlowGradientTesla} d="M 8 3 Q 30 20, 30 50 L 30 119" strokeLinecap="round" />} */}
                     </svg>
-
+                    }
 
                     <div className={`${styles.statusModule} ${styles.tesla}`}>
-                        <h5>{(tesla.charger_actual_current * tesla.charger_voltage / 1000).toFixed(1)}kW &middot; {tesla.charge_rate}mi/hr</h5>
+                        {teslaState === 'charging' && <h5>{(tesla.charger_actual_current * tesla.charger_voltage / 1000).toFixed(1)}kW &middot; {tesla.charge_rate}mi/hr</h5>}
                         <h5>
                             <svg width="24" height="12" viewBox="0 0 24 12" className={styles.batteryLevelIcon}>
                                 <rect x="0" y="1" width="20" height="10" rx="2" ry="2" fill="currentColor" stroke="currentColor" strokeWidth="1" />
@@ -173,6 +195,35 @@ export default function Summary() {
                 </>
                 }
             </div>
+            {showHome && vue &&
+            <>
+                <div className={styles.homeDetails}>
+                    <div className={styles.homeDetailsHeader}>
+                        <h3>Home Details </h3>
+                        <small className={styles.homeDetailsLive}><a href="https://web.emporiaenergy.com" target="_blank" rel="noopener noreferrer">View Live</a></small>
+                        <button onClick={() => setShowHome(false)} className={styles.homeDetailsClose}>X</button>
+                    </div>
+                    <div className={styles.homeDetailsBody}>
+                        <table className={styles.homeDetailsTable} cellPadding={0} cellSpacing={0}>
+                            <thead>
+                                <tr>
+                                    <th className={styles.homeDetailsTableHeader}>Device</th>
+                                    <th className={styles.homeDetailsTableHeader}>Usage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {vue.map(v => <tr key={v.device_name}>
+                                    <td className={styles.homeDetailsTableCell}>{v.device_name}</td>
+                                    <td className={styles.homeDetailsTableCell}>{formatWatt(v.usage)}</td>
+                                </tr>)}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+                <div className={styles.homeDetailsOverlay} onClick={() => setShowHome(false)} />
+            </>
+            }
         </main>
     );
 }
