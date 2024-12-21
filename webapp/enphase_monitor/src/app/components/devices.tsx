@@ -238,7 +238,7 @@ function Sankey({ vue, solar, grid, tesla, onNodeClicked }: {vue: VueProductionD
                     }
                 }]}
                 layout={{
-                    font: { size: 10 },
+                    font: { size: 10, color: 'white' },
                     width: Math.min(windowWidth-20, 700),
                     paper_bgcolor: 'transparent',
                     plot_bgcolor: 'transparent',

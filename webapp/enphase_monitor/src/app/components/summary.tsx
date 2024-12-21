@@ -48,12 +48,21 @@ export default function Summary() {
         teslaState = 'unplugged';
     }
 
+    // teslaState = 'charging';
+
     useEffect(() => {
         setGlobalState(globalState => ({ ...globalState, energyState, batt_percent, weather, teslaState }));
     }, [energyState, batt_percent, weather, teslaState, setGlobalState]);
 
     return (
+        <>
         <main className={styles.summary}>
+            <div className="picture-container">
+            <div className="picture">
+                <picture>
+                    {/* <source srcSet="/powerflow-light.png" type="image/png" media="(prefers-color-scheme: light)" /> <source srcSet="/powerflow-dark.png" type="image/png" media="(prefers-color-scheme: dark)" /> */}
+                    {/* <img src="/powerflow-light.png" alt="Powerflow" /> */}
+                </picture>
             <div className={styles.statusModules}>
                 <svg width="200" height="210" className={styles.powerFlowSolar}>
                     <defs>
@@ -196,16 +205,21 @@ export default function Summary() {
                 </>
                 }
             </div>
-            {showHome && vue && productionData && 'grid_wh' in productionData &&
-            <Devices backClicked={() => setShowHome(false)} vue={vue} 
-                vueKwh={vueKwh ?? []} 
-                solar={productionData?.panel_watts ?? 0} 
-                grid={productionData?.load_watts ?? 0} 
-                solarKwh={productionData?.panel_wh ?? 0} 
-                gridKwh={productionData?.grid_wh ?? 0}
-                tesla={tesla ? (tesla.charger_actual_current * tesla.charger_voltage) : 0} 
-                teslaKwh={teslaChargesToday ?? 0} />
-            }
+            </div>
+            <div className="fade"> </div>
+            </div>
         </main>
+
+        {showHome && vue && productionData && 'grid_wh' in productionData &&
+        <Devices backClicked={() => setShowHome(false)} vue={vue} 
+            vueKwh={vueKwh ?? []} 
+            solar={productionData?.panel_watts ?? 0} 
+            grid={productionData?.load_watts ?? 0} 
+            solarKwh={productionData?.panel_wh ?? 0} 
+            gridKwh={productionData?.grid_wh ?? 0}
+            tesla={tesla ? (tesla.charger_actual_current * tesla.charger_voltage) : 0} 
+            teslaKwh={teslaChargesToday ?? 0} />
+        }
+        </>
     );
 }

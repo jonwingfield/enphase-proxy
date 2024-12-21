@@ -26,6 +26,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-transform:translate3d(0,0,0);
 }
 
 * {
@@ -105,11 +106,13 @@ main {
   gap: 32px;
   grid-row-start: 2;
   width: 375px;
+  /* fixes weird z-index issues in safari */
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 601px) {
     main {
-        width: 1000px;
+        width: calc(100vw - 60px);
+        max-width: 1000px;
     }
 }
 
@@ -136,45 +139,57 @@ main {
     }
   }
 
-div.picture {
-    position: absolute;
-    top: 0;
-    z-index: -1;
-    overflow: hidden;
-    width: 100%;
-    
-    img {
-        height: 1000px;
-        opacity: 1.0;
-        margin-top:-100px;
-    }
-
-    @media (max-width: 1100px) {
-        img {
-            margin-left: -625px;
-        }
-    }
+div.picture-container {
+    width: 1250px;
+    max-width: 2500px;
+    margin: 0 auto;
+    position: relative;
+    height: 1200px;
+    margin-top: -120px; 
+    z-index: -3;
 
     @media (max-width: 600px) {
-        img {
-            margin-left: -510px;
-            margin-top: 0px;
-            height: 600px;
-            overflow: hidden;
-        }
+        width: 395px;
+        height: 800px;
+        margin-top: -225px;
     }
 }
 
-/* @media (max-width: 600px) {
-  main {
-    align-items: center;
-  }
+div.picture {
+    position: absolute;
+    top: 0;
+    right: -150px;
+    z-index: -2;
+    width: 1800px;
+    height: 800px;
 
-  main ol {
-    text-align: center;
-  }
+    background-image: url('/powerflow-light.png');
+    background-repeat: no-repeat;
+    background-size: auto 1040px;
+    background-position: right;
 
-} */
+    @media (prefers-color-scheme: dark) {
+        background-image: url('/powerflow-dark.png');
+    }
+
+    @media (max-width: 600px) {
+        background-size: auto 598px; /* 57.5% of 1040px */
+        /* width:900px;
+        height: 400px; */
+        /* background-size: auto 700px;
+        width: 900px;
+        height: 400px; */
+    }
+    
+}
+.fade {
+    position: absolute;
+    height: 100px;
+    width: 100%;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, var(--background) 90%);
+    bottom: 0;
+    /* display: none; */
+}
 
 
 .status-ok {
@@ -189,16 +204,12 @@ div.picture {
   color: var(--status-error);
 }
 
-.fade {
-    position: absolute;
-    height: 100px;
-    width: 100%;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, var(--background) 90%);
-    bottom: 0;
-}
-
 h5 {
     font-weight: 600;
+}
+
+header {
+    z-index: 3;
 }
 
 header h5 {

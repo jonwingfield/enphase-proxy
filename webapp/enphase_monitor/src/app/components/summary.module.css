@@ -1,5 +1,6 @@
 .summary {
     display: block;
+    z-index: 1;
 }
 
 .small {
@@ -13,9 +14,6 @@
 
 
 .statusModules {
-    position: relative;
-    width: 100%;
-    height: 700px;
 }
 
 .statusModule {
@@ -24,6 +22,7 @@
     background-color: var(--background);
     opacity: 0.8;
     border-radius: 10px;
+    z-index: 200;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -33,23 +32,23 @@
 }
 
 .solar {
-    right: 168px;
-    top: 323px;
+    right: 572px;
+    top: 434px;
 }
 
 .grid {
-    right: 60px;
-    top: 589px;
+    right: 429px;
+    top: 719px;
 }
 
 .home {
-    right: -64px;
-    top: 426px;
+    right: 323px;
+    top: 526px;
 }
 
 .weather {
-    right: 30px;
-    top: 0px;
+    right: 390px;
+    top: 140px;
 }
 
 .powerwall {
@@ -58,86 +57,90 @@
 }
 
 .tesla {
-    right: 360px;
-    top: 489px;
+    right: 751px;
+    top: 566px;
     width: 140px;
-}
-
-@keyframes flow {
-    to {
-        stroke-dashoffset: 0;
-    }
 }
 
 .powerFlowSolar {
     position: absolute;
-    top: 388px;
-    right: -44px;
+    top: 504px;
+    right: 365px;
 }
 
 .powerFlowGrid {
     position: absolute;
-    top: 507px;
-    right: -315px;
+    top: 627px;
+    right: 92px;
 }
 
 .powerFlowHome {
     position: absolute;
-    top: 393px;
-    right: -325px;
+    top: 507px;
+    right: 82px;
 }
 
 .powerFlowTesla {
     position: absolute;
-    top: 665px;
-    right: 243px;
+    top: 649px;
+    right: 554px;
+    transform: scale(1.73);
 }
 
 @media screen and (max-width: 600px) {
     .solar {
-        top: 163px;
-    }
-
-    .powerFlowSolar {
-        right: -35px;
-        top: 201px;
-        transform: scaleY(0.53);
+        right: 312px;
+        top: 394px;
     }
 
     .grid {
-        top: 389px;
-        right: 63px;
-    }
-
-    .powerwall {
-        top: 359px;
-        right: 63px;
-    }
-
-    .powerFlowGrid {
-        top: 315px;
-        right: -287px;
+        right: 189px;
+        top: 609px;
     }
 
     .home {
-        top: 226px;
-        right: -25px;
-        width: 100px;
+        right: 144px;
+        top: 456px;
+        width: 100px
     }
 
-    .powerFlowHome {
-        right: -292px;
-        top: 203px;
+    .weather {
+        right: 210px;
+        top: 210px;
+    }
+
+    .powerwall {
+        right: 60px;
+        top: 589px;
     }
 
     .tesla {
-        top: 265px;
-        right: 243px;
-
+        right: 410px;
+        top: 466px;
+        width: 140px;
     }
+
+    .powerFlowSolar {
+        top: 416px;
+        right: 168px;
+        transform: scale(0.575);
+    }
+
+    .powerFlowGrid {
+        top: 486px;
+        right: -32px;
+        transform: scale(0.575);
+    }
+
+    .powerFlowHome {
+        top: 416px;
+        right: -38px;
+        transform: scale(0.575);
+    }
+
     .powerFlowTesla {
-        right: 135px;
-        top: 315px;
+        top: 530px;
+        right: 306px;
     }
 }
 
