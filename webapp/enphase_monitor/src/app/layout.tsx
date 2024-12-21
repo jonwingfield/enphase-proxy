@@ -18,6 +18,7 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Enphase Monitor",
   description: "Monitor your Enphase solar system",
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -39,6 +40,9 @@ export default function RootLayout({
                 <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
                 <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
                 <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+                <link rel="manifest" href="/manifest.json" />
+                <meta name="theme-color" content="#000000" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             </head>
             <body className={`${geistSans.variable} ${geistMono.variable}`}>
                 <GlobalStateProvider>

@@ -1,0 +1,81 @@
+
+.homeDetails {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 2rem);
+    height: calc(100% - 2rem);
+    background-color: var(--background);
+    padding: 0rem;
+    z-index: 1000;
+    border-radius: 10px;
+    max-width: 800px;
+}
+
+@media screen and (max-width: 600px) {
+    .homeDetails {
+        width: calc(100%);
+        height: calc(100%);
+        border-radius: 0px;
+    }
+}
+
+.homeDetailsOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+.homeDetailsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: var(--gray-alpha-500);
+    border-radius: 10px 10px 0 0;
+    color: var(--foreground);
+}
+
+.homeDetailsBody {
+    height: calc(100% - 100px);
+    overflow-y: scroll;
+    padding: 0rem;
+    border-top: 2px solid var(--gray-alpha-200);
+    background-color: var(--background);
+    margin-bottom: -1rem;
+}
+
+.homeDetailsTable {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.homeDetailsTableCell {
+    text-align: left;
+    padding: 0.5rem 1rem;
+
+    &:last-child {
+        text-align: right;
+    }
+}
+
+.homeDetailsTableCellDevice {
+    color: var(--foreground);
+}
+
+.homeDetailsTableRow:last-child .homeDetailsTableCell {
+    border-bottom: none;
+}
+
+.homeDetailsTableRowBold {
+    font-weight: 600;
+}
+
+.homeDetailsTableCellDeviceIcon {
+    color: var(--primary-cta);
+}

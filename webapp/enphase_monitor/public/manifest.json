@@ -1,0 +1,33 @@
+{
+  "name": "Powerflow",
+  "short_name": "Powerflow",
+  "description": "Monitor your home power usage and solar production",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/solar-panel.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/solar-panel.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Powerflow",
+      "url": "/"
+    },
+    {
+        "name": "Production",
+        "url": "/production"
+    }
+
+  ]
+} 

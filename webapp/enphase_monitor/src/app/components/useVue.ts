@@ -20,8 +20,6 @@ export function useVue() {
         return () => clearTimeout(timeout);
     }, [vueKwh]);
 
-    console.log(vueKwh);
-
     return {
         vue,
         vueKwh,

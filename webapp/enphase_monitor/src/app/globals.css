@@ -1,6 +1,7 @@
 :root {
   --background: #e4e6ed;
   --foreground: #171717;
+  --primary-cta: #359aff;
   --status-ok: #00d0a6;
   --status-warning: #ffc107;
   --status-error: #f44336;

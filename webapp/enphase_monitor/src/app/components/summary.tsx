@@ -8,6 +8,7 @@ import { WarningAmber } from "@mui/icons-material";
 import { useTesla } from "./useTesla";
 import { capitalize } from "@mui/material";
 import { calculateGreenhouseUsage, useVue } from "./useVue";
+import { Devices } from "./devices";
 
 export default function Summary() {
     const { homeProductionData, officeProductionData } = useProduction();
@@ -46,8 +47,6 @@ export default function Summary() {
     } else {
         teslaState = 'unplugged';
     }
-
-    console.log(teslaState, tesla);
 
     useEffect(() => {
         setGlobalState(globalState => ({ ...globalState, energyState, batt_percent, weather, teslaState }));
@@ -105,7 +104,7 @@ export default function Summary() {
                         </>
                     }
                 </svg>
-                {productionData && <div className={`${styles.statusModule} ${styles.home}`} onClick={() => setShowHome(true)}>
+                {productionData && <div className={`${styles.statusModule} ${styles.home}`} onClick={globalState.source === "home" ? () => setShowHome(true) : undefined}>
                     <h5>{formatWatt(productionData.load_watts)} &middot; {formatWatt(productionData.load_wh)}h</h5>
                     <small className={styles.small}>{capitalize(globalState.source)}</small>
                 </div>}
@@ -198,28 +197,11 @@ export default function Summary() {
                 }
             </div>
             {showHome && vue &&
-            <>
-                <div className={styles.homeDetails}>
-                    <div className={styles.homeDetailsHeader}>
-                        <h3>Home Details </h3>
-                        <small className={styles.homeDetailsLive}><a href="https://web.emporiaenergy.com" target="_blank" rel="noopener noreferrer">View Live</a></small>
-                        <button onClick={() => setShowHome(false)} className={styles.homeDetailsClose}>X</button>
-                    </div>
-                    <div className={styles.homeDetailsBody}>
-                        <table className={styles.homeDetailsTable} cellPadding={0} cellSpacing={0}>
-                            <tbody>
-                                {vue.map(v => <tr key={v.device_name} className={styles.homeDetailsTableRow}>
-                                    <td className={`${styles.homeDetailsTableCell} ${styles.homeDetailsTableCellDevice}`}>{v.device_name}</td>
-                                    <td className={styles.homeDetailsTableCell}>{formatWatt(v.usage)}</td>
-                                    <td className={styles.homeDetailsTableCell}>{formatWatt(vueKwh?.find(k => k.device_name === v.device_name)?.usage ?? 0)}h</td>
-                                </tr>)}
-                            </tbody>
-                        </table>
-                    </div>
-
-                </div>
-                <div className={styles.homeDetailsOverlay} onClick={() => setShowHome(false)} />
-            </>
+            <Devices backClicked={() => setShowHome(false)} vue={vue} 
+                vueKwh={vueKwh ?? []} solar={productionData?.panel_watts ?? 0} grid={productionData?.load_watts ?? 0} 
+                solarKwh={productionData?.panel_wh ?? 0} gridKwh={productionData?.load_wh ?? 0}
+                tesla={tesla ? (tesla.charger_actual_current * tesla.charger_voltage) : 0} 
+                teslaKwh={teslaChargesToday ?? 0} />
             }
         </main>
     );
