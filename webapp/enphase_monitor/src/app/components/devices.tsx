@@ -208,19 +208,19 @@ function Sankey({ vue, solar, grid, tesla }: {vue: VueProductionData[], solar: n
                         thickness: 20,
                         line: { width: 0 }, 
                         label: data.nodes.map(n => n.name),
-                        hovertemplate: "%{value:.1f}kW<extra></extra>"
+                        hovertemplate: "%{value:.1f}W<extra></extra>"
                     },
                     link: {
                         source: data.links.map(l => l.source),
                         target: data.links.map(l => l.target),
                         value: data.links.map(l => l.value),
                         color: "rgba(53, 154, 255, 0.3)",
-                        hovertemplate: "%{value:.1f}kW<extra></extra>"
+                        hovertemplate: "%{value:.1f}W<extra></extra>"
                     }
                 }]}
                 layout={{
                     font: { size: 10 },
-                    width: Math.max(windowWidth - 100, 700),
+                    width: Math.min(windowWidth - 50, 700),
                     paper_bgcolor: 'transparent',
                     plot_bgcolor: 'transparent'
                 }}
