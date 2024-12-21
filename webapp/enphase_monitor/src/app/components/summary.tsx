@@ -196,10 +196,13 @@ export default function Summary() {
                 </>
                 }
             </div>
-            {showHome && vue &&
+            {showHome && vue && productionData && 'grid_wh' in productionData &&
             <Devices backClicked={() => setShowHome(false)} vue={vue} 
-                vueKwh={vueKwh ?? []} solar={productionData?.panel_watts ?? 0} grid={productionData?.load_watts ?? 0} 
-                solarKwh={productionData?.panel_wh ?? 0} gridKwh={productionData?.load_wh ?? 0}
+                vueKwh={vueKwh ?? []} 
+                solar={productionData?.panel_watts ?? 0} 
+                grid={productionData?.load_watts ?? 0} 
+                solarKwh={productionData?.panel_wh ?? 0} 
+                gridKwh={productionData?.grid_wh ?? 0}
                 tesla={tesla ? (tesla.charger_actual_current * tesla.charger_voltage) : 0} 
                 teslaKwh={teslaChargesToday ?? 0} />
             }

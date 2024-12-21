@@ -28,7 +28,7 @@ export type DevicesProps = {
 }
 
 export function Devices({ backClicked, vue, vueKwh, solar, grid, solarKwh, gridKwh, tesla, teslaKwh }: DevicesProps) {
-    const subNavBarItems = ['Current', 'Today', 'Sankey', 'Sankey Today'];
+    const subNavBarItems = ['Current', 'Today', 'Sankey', 'Sankey Today'] as const;
     const [selectedItem, setSelectedItem] = useState<typeof subNavBarItems[number]>('Current');
     const wingVueItems = useMemo(() => 
         vue.filter(v => v.device_name.includes('WingVue')), [vue]);
@@ -41,12 +41,14 @@ export function Devices({ backClicked, vue, vueKwh, solar, grid, solarKwh, gridK
         }
         return items;
     }, [vue, selectedItem, vueKwh]);
+    const [selectedNode, setSelectedNode] = useState<{node: Node, value: number} | null>(null);
 
     const SankeyCached = useMemo(() => {
         return <Sankey vue={selectedItem === 'Sankey Today' ? vueKwh : vue} 
             solar={selectedItem === 'Sankey Today' ? solarKwh : solar} 
             grid={selectedItem === 'Sankey Today' ? gridKwh : grid} 
-            tesla={selectedItem === 'Sankey Today' ? teslaKwh : tesla} />
+            tesla={selectedItem === 'Sankey Today' ? teslaKwh : tesla}
+            onNodeClicked={(n, v) => setSelectedNode({node: n, value: v})} />
     // Only re-render when vue changes, not when solar or grid changes, they change too often
     // eslint-disable-next-line react-hooks/exhaustive-deps 
     }, [vue, selectedItem]);
@@ -64,16 +66,17 @@ export function Devices({ backClicked, vue, vueKwh, solar, grid, solarKwh, gridK
                             <td></td>
                             <td className={`${styles.homeDetailsTableCell} ${styles.homeDetailsTableCellDevice}`}>{v.device_name}</td>
                             {selectedItem === 'Current' && <td className={styles.homeDetailsTableCell}>{formatWatt(v.usage)}</td>}
-                            {selectedItem === 'Total' && <td className={styles.homeDetailsTableCell}>{formatWatt(vueKwh?.find(k => k.device_name === v.device_name)?.usage ?? 0)}h</td>}
+                            {selectedItem === 'Today' && <td className={styles.homeDetailsTableCell}>{formatWatt(vueKwh?.find(k => k.device_name === v.device_name)?.usage ?? 0)}h</td>}
                         </tr>)}
                         {otherItems.map(v => <tr key={v.device_name} className={styles.homeDetailsTableRow}>
                             <td><DeviceIcon device={v.device_name} className={styles.homeDetailsTableCellDeviceIcon} /></td>
                             <td className={`${styles.homeDetailsTableCell} ${styles.homeDetailsTableCellDevice}`}>{v.device_name}</td>
                             {selectedItem === 'Current' && <td className={styles.homeDetailsTableCell}>{formatWatt(v.usage)}</td>}
-                            {selectedItem === 'Total' && <td className={styles.homeDetailsTableCell}>{formatWatt(vueKwh?.find(k => k.device_name === v.device_name)?.usage ?? 0)}h</td>}
+                            {selectedItem === 'Today' && <td className={styles.homeDetailsTableCell}>{formatWatt(vueKwh?.find(k => k.device_name === v.device_name)?.usage ?? 0)}h</td>}
                         </tr>)}
                     </tbody>
                 </table>}
+                {selectedNode && <div>{selectedNode.node    }: {selectedItem === 'Current' ? formatWatt(selectedNode.value) : formatWatt(selectedNode.value)}</div>}
             </div>
 
         </div>
@@ -129,6 +132,7 @@ function DeviceIcon({ device, className }: { device: string, className? : string
 
 const nodes = [
         "WingVue",
+        "WingVue-Balance",
         "Solar",
         "Grid",
 
@@ -137,6 +141,8 @@ const nodes = [
         "Greenhouse",
         "House",
         "Tesla",
+        "Household",
+        "Large Appliances",
 
         // Leaf Nodes
         "A/C",
@@ -161,18 +167,24 @@ const nodes = [
         "Water Heater",
         "Well",
         "Dryer"
-    ];
+    ] as const;
 
-function Sankey({ vue, solar, grid, tesla }: {vue: VueProductionData[], solar: number, grid: number, tesla: number}) {
+type Node = typeof nodes[number];
+
+function isTouchDevice() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+}
+
+function Sankey({ vue, solar, grid, tesla, onNodeClicked }: {vue: VueProductionData[], solar: number, grid: number, tesla: number, onNodeClicked: (node: Node, value: number) => void}) {
     const windowWidth = window.innerWidth;
 
     // The below stuff is expensive, but we only do it when vue changes
 
-    const link = (source: string, target: string) => {
+    const link = (source: Node, target: Node) => {
         return { source: nodes.indexOf(source), target: nodes.indexOf(target), value: valueForDevice(vue, target) };
     }
 
-    const intermediateLinks = (source: string, intermediate: string, targets: string[]) => {
+    const intermediateLinks = (source: Node, intermediate: Node, targets: Node[]) => {
         return [
             {  source: nodes.indexOf(source), target: nodes.indexOf(intermediate), value: valueForMultipleDevices(vue, targets) },
             ...targets.map(target => link(intermediate, target))
@@ -191,40 +203,61 @@ function Sankey({ vue, solar, grid, tesla }: {vue: VueProductionData[], solar: n
         links: [
             ...intermediateLinks("WingVue", "Office", ["NetworkMain", "NetworkOffice", "OfficeDesk", "WorkPC and TV", "Office AC"]),
             ...intermediateLinks("WingVue", "Greenhouse", ["Greenhouse1", "Greenhouse2"]),
-            ...intermediateLinks("WingVue", "House", ["A/C", "Kitchen", "Freezer", "Fridge", "Range", "LivingRoomTV", "Washing Machine", "Dishwasher", "HouseMisc1", "HouseMisc2", "Microwave", "PoolPump", "Water Heater", "Well", "Dryer"]),
+            ...intermediateLinks("WingVue", "Household", ["Kitchen", "Freezer", "Fridge", "Range", "LivingRoomTV", "Washing Machine", "Dishwasher", "HouseMisc1", "HouseMisc2", "Microwave", "Dryer"]),
+            ...intermediateLinks("WingVue", "Large Appliances", ["A/C", "Water Heater", "PoolPump", "Well"]),
+            link("WingVue", "WingVue-Balance"),
             ...wideLinks,
             { source: nodes.indexOf("WingVue"), target: nodes.indexOf("Tesla"), value: tesla }
         ]
     };
     
     return (
-        <div style={{ width: '100%', height: '600px' }}>
+        <div style={{ width: '100%', height: '500px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
             <Plot
                 data={[{
                     type: "sankey",
                     orientation: "h",
+                    arrangement: isTouchDevice() ? 'snap' : "fixed",
                     node: {
-                        pad: 15,
+                        pad: 15, 
                         thickness: 20,
                         line: { width: 0 }, 
                         label: data.nodes.map(n => n.name),
-                        hovertemplate: "%{value:.1f}W<extra></extra>"
+                        hovertemplate: "%{value:.1f}W<extra></extra>",
+                        // Add click events for nodes
+                        customdata: data.nodes.map(n => n.name),
                     },
                     link: {
                         source: data.links.map(l => l.source),
                         target: data.links.map(l => l.target),
                         value: data.links.map(l => l.value),
                         color: "rgba(53, 154, 255, 0.3)",
-                        hovertemplate: "%{value:.1f}W<extra></extra>"
+                        hovertemplate: "%{value:.1f}W<extra></extra>",
+                        // Add click events for links
+                        customdata: data.links.map(l => `${data.nodes[l.source].name} → ${data.nodes[l.target].name}`),
                     }
                 }]}
                 layout={{
                     font: { size: 10 },
-                    width: Math.min(windowWidth - 50, 700),
+                    width: Math.min(windowWidth-20, 700),
                     paper_bgcolor: 'transparent',
-                    plot_bgcolor: 'transparent'
+                    plot_bgcolor: 'transparent',
+                    margin: { t: 15, b: 15, l: 15, r: 15 }
                 }}
-                config={{ responsive: true }}
+                config={{ 
+                    responsive: true,
+                    displayModeBar: false
+                }}
+                onClick={(data) => {
+                    if (data.points && data.points[0]) {
+                        const point = data.points[0];
+                        if (point.customdata) {
+                            const node = (point.customdata as string).split(' → ');
+                            onNodeClicked(node[node.length - 1] as Node, (point as any).value);
+                        }
+                    }
+                }}
+                
             />
         </div>
     );

@@ -20,7 +20,7 @@ export function NavBar({ title, backClicked, rightButton }: NavBarProps) {
 }
 
 export interface SubNavBarProps<T extends string> {
-    items: T[];
+    items: ReadonlyArray<T>;
     selectedItem: T;
     onItemClicked: (item: T) => void;
 }
