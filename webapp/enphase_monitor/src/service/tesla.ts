@@ -2,7 +2,7 @@ export interface TeslaState {
     state: string;
     battery_level: number;
     charger_power: number;
-    charging_state: "Charging" | "Disconnected" | "Connected" | "Starting" | "Stopped" | "Pending" | "Error";
+    charging_state: "Charging" | "Disconnected" | "Connected" | "Starting" | "Stopped" | "Pending" | "Error" | "Complete";
     charger_actual_current: number;
     charger_voltage: number;
     charge_limit_soc: number;

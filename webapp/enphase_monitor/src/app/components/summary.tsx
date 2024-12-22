@@ -39,7 +39,7 @@ export default function Summary() {
             } else {
                 teslaState = 'notHome';
             }
-        } else if (tesla.charging_state === 'Stopped') {
+        } else if (tesla.charging_state === 'Stopped' || tesla.charging_state === 'Complete' || tesla.charging_state === 'Connected') {
             teslaState = 'pluggedIn';
         } else {
             teslaState = 'unplugged';
@@ -47,8 +47,6 @@ export default function Summary() {
     } else {
         teslaState = 'unplugged';
     }
-
-    // teslaState = 'charging';
 
     useEffect(() => {
         setGlobalState(globalState => ({ ...globalState, energyState, batt_percent, weather, teslaState }));

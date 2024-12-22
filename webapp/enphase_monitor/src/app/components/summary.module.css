@@ -141,6 +141,7 @@
     .powerFlowTesla {
         top: 530px;
         right: 306px;
+        transform: scale(1.0);
     }
 }
 

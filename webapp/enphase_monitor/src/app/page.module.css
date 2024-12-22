@@ -162,6 +162,10 @@ a.secondary {
   justify-content: space-between;
 }
 
+.headerRight {
+    padding-top: 7px;
+}
+
 .footer {
     display: flex;
     gap: 24px;
