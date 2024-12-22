@@ -1,11 +1,11 @@
 
 .homeDetails {
     position: absolute;
-    top: 50%;
+    top: 1rem;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, 0%);
     width: calc(100% - 2rem);
-    height: calc(100% - 2rem);
+    height: calc(100vh - 4rem);
     background-color: var(--background);
     padding: 0rem;
     z-index: 1000;
@@ -15,9 +15,10 @@
 
 @media screen and (max-width: 600px) {
     .homeDetails {
-        width: calc(100%);
-        height: calc(100%);
+        width: 100%;
+        height: 100vh;
         border-radius: 0px;
+        top: 0;
     }
 }
 
@@ -52,7 +53,8 @@
 
 .homeDetailsTable {
     margin-top: 1rem;
-    width: 100%;
+    width: calc(100% - 2rem);
+    margin:1rem;
 }
 
 .homeDetailsTableCell {

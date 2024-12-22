@@ -28,7 +28,7 @@ export type DevicesProps = {
 }
 
 export function Devices({ backClicked, vue, vueKwh, solar, grid, solarKwh, gridKwh, tesla, teslaKwh }: DevicesProps) {
-    const subNavBarItems = ['Current', 'Today', 'Sankey', 'Sankey Today'] as const;
+    const subNavBarItems = ['Current', 'Today'] as const;
     const [selectedItem, setSelectedItem] = useState<typeof subNavBarItems[number]>('Current');
     const wingVueItems = useMemo(() => 
         vue.filter(v => v.device_name.includes('WingVue')), [vue]);
@@ -44,10 +44,10 @@ export function Devices({ backClicked, vue, vueKwh, solar, grid, solarKwh, gridK
     const [selectedNode, setSelectedNode] = useState<{node: Node, value: number} | null>(null);
 
     const SankeyCached = useMemo(() => {
-        return <Sankey vue={selectedItem === 'Sankey Today' ? vueKwh : vue} 
-            solar={selectedItem === 'Sankey Today' ? solarKwh : solar} 
-            grid={selectedItem === 'Sankey Today' ? gridKwh : grid} 
-            tesla={selectedItem === 'Sankey Today' ? teslaKwh : tesla}
+        return <Sankey vue={selectedItem === 'Today' ? vueKwh : vue} 
+            solar={selectedItem === 'Today' ? solarKwh : solar} 
+            grid={selectedItem === 'Today' ? gridKwh : grid} 
+            tesla={selectedItem === 'Today' ? teslaKwh : tesla}
             onNodeClicked={(n, v) => setSelectedNode({node: n, value: v})} />
     // Only re-render when vue changes, not when solar or grid changes, they change too often
     // eslint-disable-next-line react-hooks/exhaustive-deps 
@@ -59,8 +59,8 @@ export function Devices({ backClicked, vue, vueKwh, solar, grid, solarKwh, gridK
                 rightButton={<a href="https://web.emporiaenergy.com" target="_blank" rel="noopener noreferrer"><EnergySavingsLeaf /></a>} />
             <SubNavBar items={subNavBarItems} selectedItem={selectedItem} onItemClicked={setSelectedItem} />
             <div className={styles.homeDetailsBody}>
-                {(selectedItem === 'Sankey' || selectedItem === 'Sankey Today') && SankeyCached}
-                {selectedItem !== 'Sankey' && selectedItem !== 'Sankey Today' && <table className={styles.homeDetailsTable}>
+                {SankeyCached}
+                <table className={styles.homeDetailsTable}>
                     <tbody>
                         {wingVueItems.map(v => <tr key={v.device_name} className={`${styles.homeDetailsTableRow} ${styles.homeDetailsTableRowBold}`}>
                             <td></td>
@@ -75,7 +75,7 @@ export function Devices({ backClicked, vue, vueKwh, solar, grid, solarKwh, gridK
                             {selectedItem === 'Today' && <td className={styles.homeDetailsTableCell}>{formatWatt(vueKwh?.find(k => k.device_name === v.device_name)?.usage ?? 0)}h</td>}
                         </tr>)}
                     </tbody>
-                </table>}
+                </table>
                 {selectedNode && <div>{selectedNode.node    }: {selectedItem === 'Current' ? formatWatt(selectedNode.value) : formatWatt(selectedNode.value)}</div>}
             </div>
 

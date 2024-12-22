@@ -57,7 +57,7 @@ export default function Summary() {
         <>
         <main className={styles.summary}>
             <div className="picture-container">
-            <div className="picture">
+            <div className={`picture ${teslaState === 'unplugged' ? 'unplugged' : teslaState === 'notHome' ? 'nocar' : ''}`}>
                 <picture>
                     {/* <source srcSet="/powerflow-light.png" type="image/png" media="(prefers-color-scheme: light)" /> <source srcSet="/powerflow-dark.png" type="image/png" media="(prefers-color-scheme: dark)" /> */}
                     {/* <img src="/powerflow-light.png" alt="Powerflow" /> */}
@@ -188,7 +188,7 @@ export default function Summary() {
                     </svg>
                     }
 
-                    <div className={`${styles.statusModule} ${styles.tesla}`}>
+                    <div className={`${styles.statusModule} ${styles.tesla}`} onClick={() => window.open('tessie://home', '_blank')}>
                         {teslaState === 'charging' && <h5>{(tesla.charger_actual_current * tesla.charger_voltage / 1000).toFixed(1)}kW &middot; {tesla.charge_rate}mi/hr</h5>}
                         <h5>
                             <svg width="24" height="12" viewBox="0 0 24 12" className={styles.batteryLevelIcon}>
