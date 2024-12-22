@@ -149,54 +149,90 @@
     stroke: #646464;
     stroke-width: 3px;
     fill: none;
+    
+    @media (max-width: 600px) {
+        stroke-width: 5px;
+    }
 }
 
 .powerFlow3d {
     stroke: rgb(35, 35, 35);
     stroke-width: 3px;
     fill: none;
+
+    @media (max-width: 600px) {
+        stroke-width: 5px;
+    }
 }
 
 .powerFlowGradient {
     stroke: url(#gradient);
     stroke-width: 3px;
     fill: none;
+
+    @media (max-width: 600px) {
+        stroke-width: 5px;
+    }
 }
 
 .powerFlowGradientGrid {
     stroke: url(#gradientGrid);
     stroke-width: 3px;
     fill: none;
+
+    @media (max-width: 600px) {
+        stroke-width: 5px;
+    }
 }
 
 .powerFlowGradientExport {
     stroke: url(#gradientExport);
     stroke-width: 3px;
     fill: none;
+
+    @media (max-width: 600px) {
+        stroke-width: 5px;
+    }
 }
 
 .powerFlowGradient2 {
     stroke: url(#gradient2);
     stroke-width: 3px;
     fill: none;
+
+    @media (max-width: 600px) {
+        stroke-width: 5px;
+    }
 }
 
 .powerFlowGradientImport {
     stroke: url(#gradientImport);
     stroke-width: 3px;
     fill: none;
+
+    @media (max-width: 600px) {
+        stroke-width: 5px;
+    }
 }
 
 .powerFlowPathTesla {
     stroke: #646464;
     stroke-width: 2px;
     fill: none;
+
+    @media (max-width: 600px) {
+        stroke-width: 5px;
+    }
 }
 
 .powerFlowGradientTesla {
     stroke: url(#gradientTesla);
     stroke-width: 2px;
     fill: none;
+
+    @media (max-width: 600px) {
+        stroke-width: 5px;
+    }
 }
 
 .weatherAlert {

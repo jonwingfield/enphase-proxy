@@ -195,7 +195,7 @@ export default function Summary() {
                                 <rect x="0" y="1" width="20" height="10" rx="2" ry="2" fill="currentColor" stroke="currentColor" strokeWidth="1" />
                               <rect x="21" y="3" width="1" height="6" fill="currentColor" />
                               <rect x="21" y="3" width="2" height="6" rx="2" ry="2" fill="currentColor" />
-                              <rect x="1" y="2" width={`${tesla.battery_level * 16 / 100}`} height="8" rx="1.5" ry="1.5" fill="#00d0a6" />
+                              <rect x="1.5" y="2" width={`${tesla.battery_level * 16 / 100}`} height="8" rx="1.5" ry="1.5" fill="#00d0a6" />
                           </svg>
                           {tesla.battery_level}% &middot; {formatWatt(teslaChargesToday ?? 0)}h
                         </h5>

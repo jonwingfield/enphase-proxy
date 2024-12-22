@@ -30,9 +30,11 @@ export default function RootLayout({
         <html lang="en">
             <head>
                 <meta name="apple-mobile-web-app-capable" content="yes" />
-                <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+                <meta name="mobile-web-app-capable" content="yes" />
+                <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
                 <meta name="apple-mobile-web-app-title" content="Powerflow" />
-                <link rel="apple-touch-icon" href="/solar-panel.png" />
+                <meta name="theme-color" content="#e4e6ed" media="(prefers-color-scheme: light)" />
+                <meta name="theme-color" content="#435870" media="(prefers-color-scheme: dark)" />
                 <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" />
                 <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
                 <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" />
