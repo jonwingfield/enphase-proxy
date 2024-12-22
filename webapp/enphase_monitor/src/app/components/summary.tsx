@@ -12,12 +12,13 @@ import { Devices } from "./devices";
 
 export default function Summary() {
     const { homeProductionData, officeProductionData } = useProduction();
-    const { weather } = useWeather();
+    const { weather, outdoorWeather } = useWeather();
     const { tesla, teslaChargesToday } = useTesla();
     const { vue, vueKwh } = useVue();
     const { globalState, setGlobalState } = useGlobalState();
     const [individualVoltage, setIndividualVoltage] = useState(true);
     const [showHome, setShowHome] = useState(false);
+    const [weatherType, setWeatherType] = useState<'greenhouse' | 'outdoor'>('greenhouse');
 
     const productionData = globalState.source === "home" ? homeProductionData : officeProductionData;
 
@@ -157,16 +158,16 @@ export default function Summary() {
                         <small className={styles.small}>Powerwall</small>
                     </div>
                 }
-                {weather && <div className={`${styles.statusModule} ${styles.weather}`}>
+                {weather && <div className={`${styles.statusModule} ${styles.weather}`} onClick={() => setWeatherType(type => type === 'greenhouse' ? 'outdoor' : 'greenhouse')}>
                     <h5 className={isWeatherAlert(weather) ? styles.weatherAlert : undefined}>
-                        {weather.tempf.toFixed(0)}°F&nbsp;
+                        {weatherType === 'greenhouse' ? weather.tempf.toFixed(0) : outdoorWeather?.tempf.toFixed(0)}°F&nbsp;
                         {isWeatherAlert(weather) && (
                             <WarningAmber fontSize="inherit" className={styles.weatherAlertIcon} />
                         )}
                     </h5>
-                    <h5 className={styles.weatherTempRange}>{weather.minTempf.toFixed(0)}°F - {weather.maxTempf.toFixed(0)}°F</h5>
+                    <h5 className={styles.weatherTempRange}>{weatherType === 'greenhouse' ? weather.minTempf.toFixed(0) : outdoorWeather?.minTempf.toFixed(0)}°F - {weatherType === 'greenhouse' ? weather.maxTempf.toFixed(0) : outdoorWeather?.maxTempf.toFixed(0)}°F</h5>
                     {vue && <h5>{formatWatt(calculateGreenhouseUsage(vue) ?? 0)} &middot; {formatWatt(calculateGreenhouseUsage(vueKwh) ?? 0)}h</h5>}
-                    <small className={styles.small}>Greenhouse</small>
+                    <small className={styles.small}>{weatherType === 'greenhouse' ? 'Greenhouse' : 'Outdoor'}</small>
                 </div>}
                 {tesla &&
                 <>
