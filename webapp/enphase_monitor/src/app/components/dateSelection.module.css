@@ -17,10 +17,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--gray-alpha-500);
+
+    &:disabled {
+        color: var(--gray-alpha-200);
+    }
 }
 
 .datePickerInput {
     width: 150px;
     border: var(--gray-alpha-200) 1px solid;
     background-color: var(--section-background);
+    color: var(--gray-alpha-500);
+
 }
