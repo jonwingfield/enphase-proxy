@@ -5,6 +5,7 @@ import styles from "./production.module.css";
 import Chart from "./chart";
 import { useGlobalState } from "./GlobalStateContext";
 import { ChartData } from "@/service/enphaseProduction";
+import DateSelection from "./dateSelection";
 
 interface ProductionData {
     production: {
@@ -243,35 +244,8 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
     }, [chartData, comparisonData]);
 
     return <div className={visible ? "" : styles.hidden}>
+        <DateSelection date={comparisonDate} setDate={setComparisonDate} excludeToday />
 
-        <div className={styles.datePicker}>
-            &nbsp;
-            Compare to: &nbsp;
-            <button className={styles.datePickerButton}
-                onClick={() => {
-                    const d = new Date(comparisonDate);
-                    d.setDate(d.getDate() - 1);
-                    setComparisonDate(d);
-                }}
-            >&lt;</button>&nbsp;
-            <input
-                type="date"
-                onChange={(e) => {
-                    const d = e.target.value ? new Date(e.target.value + "T12:00:00Z") : new Date();
-                    setComparisonDate(d);
-                }}
-                value={comparisonDate.toISOString().split('T')[0]}
-            />
-            &nbsp;
-            <button className={styles.datePickerButton}
-                onClick={() => {
-                    const d = new Date(comparisonDate);
-                    d.setDate(d.getDate() + 1);
-                    setComparisonDate(d);
-                }}
-                disabled={comparisonDate.getTime() >= new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0,0,0,0)}
-            >&gt;</button>
-        </div>
         <table className={styles.table}>
             <thead>
                 <tr>

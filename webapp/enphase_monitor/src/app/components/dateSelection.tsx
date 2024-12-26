@@ -4,9 +4,10 @@ import styles from './dateSelection.module.css';
 interface DateSelectionProps {
     date: Date;
     setDate: (date: Date) => void;
+    excludeToday?: boolean;
 }
 
-export default function DateSelection({ date, setDate }: DateSelectionProps) {
+export default function DateSelection({ date, setDate, excludeToday }: DateSelectionProps) {
     return  (
         <div className={styles.datePicker}>
             <button className={styles.datePickerButton}
@@ -32,7 +33,7 @@ export default function DateSelection({ date, setDate }: DateSelectionProps) {
                     d.setDate(d.getDate() + 1);
                     setDate(d);
                 }}
-                disabled={date.getTime() >= new Date().setHours(0,0,0,0)}
+                disabled={date.getTime() >= (!excludeToday ? new Date().setHours(0,0,0,0) : new Date(new Date().setDate(new Date().getDate() - 1)).setHours(0,0,0,0))}
             ><KeyboardArrowRight /></button>
         </div>
     )

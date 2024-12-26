@@ -116,12 +116,15 @@ export async function fetchMultiDayOfficeProductionData(numDays: number): Promis
     return lastSevenDays.flat();
 }
 
-export async function fetchBatteryData(): Promise<{ timestamp: Date, value: number }[]> {
-    const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
+export async function fetchBatteryData(date: Date = new Date()): Promise<{ timestamp: Date, value: number }[]> {
+    const midnightOnDate = new Date(new Date(date).setHours(0, 0, 0, 0));
+    const end = new Date(new Date(date).setHours(23, 59, 59));
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
         db: "solar",
-        q: `SELECT last("batt_v")/4 as batt_v FROM "energy"."two weeks"."energy" WHERE time > '${midnightToday.toISOString()}'
-            GROUP BY time(1m)`
+        q: `SELECT last("batt_v")/4 as batt_v 
+            FROM "energy"."two weeks"."energy" 
+            WHERE time > '${midnightOnDate.toISOString()}' and time < '${end.toISOString()}'
+            GROUP BY time(2m) fill(previous)`
     }));
     const data = await response.json();
     return data.results[0].series[0].values.map((point: [string, number]) => ({

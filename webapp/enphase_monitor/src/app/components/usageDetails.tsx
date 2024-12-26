@@ -37,113 +37,130 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
     const [timeRange, setTimeRange] = useState<TimeRange>('Day');
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const selectedDateIsToday = isToday(selectedDate);
+    const [chartType, setChartType] = useState<'line' | 'bar'>('line');
 
-    const fetchData = () => {   
-        if (timeRange === 'Day') {
-            fetchTodayProductionData(selectedDate).then(({series}) => {
-                setRooftopChartData({
-                    series: [
-                        { title: "Production", color: ThemeColors.production, data: series[0].data },
-                        { title: "Consumption", color: ThemeColors.consumption, data: series[1].data },
-                        { title: "Grid", color: ThemeColors.grid, data: series[0].data.map((d, i) => ({ timestamp: d.timestamp, value: series[1].data[i].value - d.value })) }
-                    ]   
+    const fetchData = (type: 'home' | 'office' | 'battery') => {   
+        if (type === 'home') {
+            if (timeRange === 'Day') {
+                fetchTodayProductionData(selectedDate).then(({series}) => {
+                    setRooftopChartData({
+                        series: [
+                            { title: "Production", color: ThemeColors.production, data: series[0].data },
+                            { title: "Consumption", color: ThemeColors.consumption, data: series[1].data },
+                            { title: "Grid", color: ThemeColors.grid, data: series[0].data.map((d, i) => ({ timestamp: d.timestamp, value: series[1].data[i].value - d.value })) }
+                        ]   
+                    });
+                    // NOTE: we set this because we want the chart to re-render when the data changes. Otherwise , we would just check the range when passing the prop for the chart component
+                    setChartType('line');
                 });
-            });
-        } else if (timeRange === 'Billing Cycle') {
-            const billingStartDate = new Date(globalState.billingCycleStartDate + 'T08:00:00Z');
-            const daysAgo = differenceInDays(new Date(), billingStartDate);
-            fetchMultiDayProductionData(daysAgo).then(data => {
-                setRooftopChartData({
-                    series: [
-                        { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
-                        { title: "Consumption", color: ThemeColors.consumption, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts })) },
-                        { title: "Grid", color: ThemeColors.grid, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts - d.productionWatts })) },
-                    ]
+            } else if (timeRange === 'Billing Cycle') {
+                const billingStartDate = new Date(globalState.billingCycleStartDate + 'T08:00:00Z');
+                const daysAgo = differenceInDays(new Date(), billingStartDate);
+                fetchMultiDayProductionData(daysAgo).then(data => {
+                    setRooftopChartData({
+                        series: [
+                            { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
+                            { title: "Consumption", color: ThemeColors.consumption, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts })) },
+                            { title: "Grid", color: ThemeColors.grid, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts - d.productionWatts })) },
+                        ]
+                    });
+                    setChartType('bar');
                 });
-            });
-        } else if (timeRange === 'Month') {
-            const firstDayOfMonth = startOfMonth(new Date());
-            const daysAgo = differenceInDays(new Date(), firstDayOfMonth);
-            fetchMultiDayProductionData(daysAgo).then(data => {
-                setRooftopChartData({
-                    series: [
-                        { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
-                        { title: "Consumption", color: ThemeColors.consumption, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts })) },
-                        { title: "Grid", color: ThemeColors.grid, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts - d.productionWatts })) },
-                    ]
+            } else if (timeRange === 'Month') {
+                const firstDayOfMonth = startOfMonth(new Date());
+                const daysAgo = differenceInDays(new Date(), firstDayOfMonth);
+                fetchMultiDayProductionData(daysAgo).then(data => {
+                    setRooftopChartData({
+                        series: [
+                            { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
+                            { title: "Consumption", color: ThemeColors.consumption, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts })) },
+                            { title: "Grid", color: ThemeColors.grid, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts - d.productionWatts })) },
+                        ]
+                    });
+                    setChartType('bar');
                 });
-            });
-        } 
-
-        if (timeRange === 'Day') {
-            getLast12HoursOfficeProduction().then(({series}) => {
-                setOfficeChartData({
-                    series: [
-                        { title: "Production", color: ThemeColors.production, data: series[0].data },
-                        { title: "Consumption", color: ThemeColors.consumption, data: series[1].data },
-                        { title: "Grid", color: ThemeColors.grid, data: series[0].data.map((d, i) => ({ timestamp: d.timestamp, value: series[1].data[i].value - d.value })) }
-                    ]
-                });
-            });
-        } else if (timeRange === 'Billing Cycle') {
-            const billingStartDate = new Date(globalState.billingCycleStartDate + 'T08:00:00Z');
-            const daysAgo = differenceInDays(new Date(), billingStartDate);
-            fetchMultiDayOfficeProductionData(daysAgo).then(data => {
-                setOfficeChartData({
-                    series: [
-                        { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
-                        { title: "Consumption", color: ThemeColors.consumption, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts })) },
-                        { title: "Grid", color: ThemeColors.grid, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts - d.productionWatts })) },
-                    ]
-                });
-            });
-
-        } else if (timeRange === 'Month') {
-            const firstDayOfMonth = startOfMonth(new Date());
-            const daysAgo = differenceInDays(new Date(), firstDayOfMonth);
-            fetchMultiDayOfficeProductionData(daysAgo).then(data => {
-                setOfficeChartData({
-                    series: [
-                        { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
-                        { title: "Consumption", color: ThemeColors.consumption, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts })) },
-                        { title: "Grid", color: ThemeColors.grid, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts - d.productionWatts })) },
-                    ]
-                });
-            });
+            } 
         }
 
-        if (timeRange === 'Day') {
-            fetchBatteryData().then(data => {
-                setBatteryChartData({
-                    series: [{ title: "Battery Voltage", color: ThemeColors.powerwall, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.value })) }],
+        if (type === 'office') {
+                if (timeRange === 'Day') {
+                    getLast12HoursOfficeProduction().then(({series}) => {
+                        setOfficeChartData({
+                        series: [
+                            { title: "Production", color: ThemeColors.production, data: series[0].data },
+                            { title: "Consumption", color: ThemeColors.consumption, data: series[1].data },
+                            { title: "Grid", color: ThemeColors.grid, data: series[0].data.map((d, i) => ({ timestamp: d.timestamp, value: series[1].data[i].value - d.value })) }
+                        ]
+                    });
+                    setChartType('line');
                 });
-            });
-        } else if (timeRange === 'Billing Cycle') {
-            const billingStartDate = new Date(globalState.billingCycleStartDate + 'T08:00:00Z');
-            const daysAgo = differenceInDays(new Date(), billingStartDate);
-            fetchMultiDayBatteryData(daysAgo).then(data => {
-                setBatteryChartData({
-                    series: [{ title: "Battery Voltage", color: ThemeColors.powerwall, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.value })) }],
+            } else if (timeRange === 'Billing Cycle') {
+                const billingStartDate = new Date(globalState.billingCycleStartDate + 'T08:00:00Z');
+                const daysAgo = differenceInDays(new Date(), billingStartDate);
+                fetchMultiDayOfficeProductionData(daysAgo).then(data => {
+                    setOfficeChartData({
+                        series: [
+                            { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
+                            { title: "Consumption", color: ThemeColors.consumption, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts })) },
+                            { title: "Grid", color: ThemeColors.grid, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts - d.productionWatts })) },
+                        ]
+                    });
+                    setChartType('bar');
                 });
-            });
-        } else if (timeRange === 'Month') {
-            const firstDayOfMonth = startOfMonth(new Date());
-            const daysAgo = differenceInDays(new Date(), firstDayOfMonth);
-            fetchMultiDayBatteryData(daysAgo).then(data => {
-                setBatteryChartData({
-                    series: [{ title: "Battery Voltage", color: ThemeColors.powerwall, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.value })) }],
+
+            } else if (timeRange === 'Month') {
+                const firstDayOfMonth = startOfMonth(new Date());
+                const daysAgo = differenceInDays(new Date(), firstDayOfMonth);
+                fetchMultiDayOfficeProductionData(daysAgo).then(data => {
+                    setOfficeChartData({
+                        series: [
+                            { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
+                            { title: "Consumption", color: ThemeColors.consumption, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts })) },
+                            { title: "Grid", color: ThemeColors.grid, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.consumptionWatts - d.productionWatts })) },
+                        ]
+                    });
+                    setChartType('bar');
                 });
-            });
+            }
+        }
+
+        if (type === 'battery') {
+            if (timeRange === 'Day') {
+                fetchBatteryData(selectedDate).then(data => {
+                    setBatteryChartData({
+                        series: [{ title: "Battery Voltage", color: ThemeColors.powerwall, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.value })) }],
+                    });
+                    setChartType('line');
+                });
+            } else if (timeRange === 'Billing Cycle') {
+                const billingStartDate = new Date(globalState.billingCycleStartDate + 'T08:00:00Z');
+                const daysAgo = differenceInDays(new Date(), billingStartDate);
+                fetchMultiDayBatteryData(daysAgo).then(data => {
+                    setBatteryChartData({
+                        series: [{ title: "Battery Voltage", color: ThemeColors.powerwall, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.value })) }],
+                    });
+                    setChartType('bar');
+                });
+            } else if (timeRange === 'Month') {
+                const firstDayOfMonth = startOfMonth(new Date());
+                const daysAgo = differenceInDays(new Date(), firstDayOfMonth);
+                fetchMultiDayBatteryData(daysAgo).then(data => {
+                    setBatteryChartData({
+                        series: [{ title: "Battery Voltage", color: ThemeColors.powerwall, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.value })) }],
+                    });
+                    setChartType('bar');
+                });
+            }
         }
     };
 
     useEffect(() => { 
-        fetchData(); 
-    }, [timeRange, selectedDate]);
+        fetchData(globalState.source === 'home' ? 'home' : source === 'battery' ? 'battery' : 'office'); 
+    }, [timeRange, selectedDate, globalState.source, source]);
 
     useEffect(() => {
         const timeout = setTimeout(() => {
-            fetchData();
+            fetchData(globalState.source === 'home' ? 'home' : source === 'battery' ? 'battery' : 'office');
         }, 60 * 1000);
 
         return () => clearTimeout(timeout);
@@ -206,10 +223,10 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                 <div className={styles.chartContainer}>
                     <Chart data={{ series: source === 'battery' ? batteryChartData.series : [chartData.series[seriesIndex]]}} 
                         highlightMode="max" 
-                        defaultTimeRange={timeRange === 'Day' && selectedDateIsToday ? 'Day' : 'All'} 
-                        type={timeRange === 'Day' ? 'line' : 'bar'}
-                        hideAverages={timeRange === 'Day'} 
-                        hideTimeRange={timeRange !== 'Day' || !selectedDateIsToday}
+                        defaultTimeRange={chartType === 'line' && selectedDateIsToday ? 'Day' : 'All'} 
+                        type={chartType}
+                        hideAverages={chartType === 'line'} 
+                        hideTimeRange={chartType === 'bar' || !selectedDateIsToday}
                         suffix={source === 'battery' ? (timeRange === 'Day' ? "V" : "%") : (timeRange !== 'Day' ? "h" : undefined)} />
                 </div>
                 {timeRange === 'Day' && <div className={styles.dateSelectionContainer}>
