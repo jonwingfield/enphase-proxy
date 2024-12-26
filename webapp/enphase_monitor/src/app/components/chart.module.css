@@ -19,18 +19,26 @@
 .chartTimeRange {
     display: flex;
     justify-content: center;
-    gap: 8px;
+    background: var(--gray-alpha-200);
+    padding: 4px;
+    border-radius: 24px;
     margin-top: 10px;
+    gap: 4px;
 }
 
 .chartButton {
-    border-radius: 16px;
+    border-radius: 20px;
     padding: 8px 0px;
     width: 35px;
     border: 0;
     color: var(--gray-alpha-500);
+    background: transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .selected {
-    border: 1px solid var(--button-primary-hover);
+    background: white;
+    color: var(--gray-alpha-500);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

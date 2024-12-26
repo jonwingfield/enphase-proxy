@@ -81,3 +81,9 @@
 .homeDetailsTableCellDeviceIcon {
     color: var(--primary-cta);
 }
+
+.rightButton {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}

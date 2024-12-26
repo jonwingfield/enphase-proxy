@@ -10,6 +10,7 @@ import { capitalize } from "@mui/material";
 import { calculateGreenhouseUsage, useVue } from "./useVue";
 import { Devices } from "./devices";
 import { UsageDetails } from "./usageDetails";
+import { ThemeColors } from "../theme";
 
 export default function Summary() {
     const { homeProductionData, officeProductionData } = useProduction();
@@ -69,7 +70,7 @@ export default function Summary() {
                         <linearGradient id="gradient" x1="0%" y1="-100%" x2="0%" y2="0%">
                             <stop offset="0%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
                             <stop offset="25%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
-                            <stop offset="99%" style={{ stopColor: "yellow", stopOpacity: 1 }} />
+                            <stop offset="99%" style={{ stopColor: ThemeColors.production, stopOpacity: 1 }} />
                             <stop offset="100%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
                             <animate attributeName="y1" values="-100%;100%;" dur="2s" repeatCount="indefinite" />
                             <animate attributeName="y2" values="0%;200%;" dur="2s" repeatCount="indefinite" />
@@ -88,7 +89,7 @@ export default function Summary() {
                         <linearGradient id="gradient2" x1="-100%" y1="0%" x2="0%" y2="-25%">
                             <stop offset="0%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
                             <stop offset="25%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
-                            <stop offset="99%" style={{ stopColor: solar ? "yellow" : (globalState.source === 'home' ? "#a6a6a6" : "#00d0a6"), stopOpacity: 1 }} />
+                            <stop offset="99%" style={{ stopColor: solar ? ThemeColors.production : (globalState.source === 'home' ? "#a6a6a6" : ThemeColors.powerwall), stopOpacity: 1 }} />
                             <stop offset="100%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
                             <animate attributeName="x1" values="-100%;100%;" dur="2s" repeatCount="indefinite" />
                             <animate attributeName="x2" values="0%;200%;" dur="2s" repeatCount="indefinite" />
@@ -96,7 +97,7 @@ export default function Summary() {
                         <linearGradient id="gradientGrid" x1="-100%" y1="0%" x2="0%" y2="-25%">
                             <stop offset="0%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
                             <stop offset="25%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
-                            <stop offset="99%" style={{ stopColor: globalState.source === "home" ? "#a6a6a6" : "#00d0a6", stopOpacity: 1 }} />
+                            <stop offset="99%" style={{ stopColor: globalState.source === "home" ? "#a6a6a6" : ThemeColors.powerwall, stopOpacity: 1 }} />
                             <stop offset="100%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
                             <animate attributeName="x1" values="-100%;100%;" dur="2s" repeatCount="indefinite" />
                             <animate attributeName="x2" values="0%;200%;" dur="2s" repeatCount="indefinite" />
@@ -124,7 +125,7 @@ export default function Summary() {
                             <linearGradient id="gradientExport" x1="-100%" y1="-100%" x2="0%" y2="0%">
                                 <stop offset="0%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
                                 <stop offset="25%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
-                                <stop offset="99%" style={{ stopColor: "yellow", stopOpacity: 1 }} />
+                                <stop offset="99%" style={{ stopColor: ThemeColors.production, stopOpacity: 1 }} />
                                 <stop offset="100%" style={{ stopColor: "#646464", stopOpacity: 1 }} />
                                 <animate attributeName="y1" values="-100%;100%;" dur="2s" repeatCount="indefinite" />
                                 <animate attributeName="y2" values="0%;200%;" dur="2s" repeatCount="indefinite" />

@@ -1,4 +1,4 @@
-import { Line } from "react-chartjs-2";
+import { Line, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -6,6 +6,7 @@ import {
   TimeSeriesScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -50,6 +51,7 @@ ChartJS.register(
   TimeSeriesScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -84,7 +86,6 @@ function triggerTooltip(chart: any, index: number, datasetIndices: number[]) {
     // } else {
       const chartArea = chart.chartArea;
 
-      console.log(chart.data.datasets);
       tooltip.setActiveElements(datasetIndices.filter(datasetIndex => chart.data.datasets[datasetIndex]?.data.length > index).map(datasetIndex => ({
         datasetIndex,
         index,
@@ -99,16 +100,24 @@ function triggerTooltip(chart: any, index: number, datasetIndices: number[]) {
     chart.update();
   }
 
-type ChartTimeRange = "1h" | "2h" | "3h" | "6h" | "12h" | "Day";
-const ChartTimeRanges: ChartTimeRange[] = ["1h", "2h", "3h", "6h", "12h", "Day"];
+type ChartTimeRange = "1h" | "2h" | "3h" | "6h" | "12h" | "Day" | "All";
+const ChartTimeRanges: ChartTimeRange[] = ["1h", "2h", "3h", "6h", "12h", "Day", "All"];
 
-export default function Chart(props: { data: ChartData, defaultTimeRange?: ChartTimeRange, highlightMode?: 'max' | 'last' }) {
+export default function Chart(props: { data: ChartData, defaultTimeRange?: ChartTimeRange, highlightMode?: 'max' | 'last' , hideTimeRange?: boolean, hideAverages?: boolean}) {
     const { data, highlightMode } = props;
     const [chartTimeRange, setChartTimeRange] = useState<ChartTimeRange>(props.defaultTimeRange || "6h");
     const [clearedSeries, setClearedSeries] = useState<string[]>([]);
+
+    const showAllData = useMemo(() => 
+        data.series[0]?.data[0]?.timestamp < (Date.now() - 1000 * 60 * 60 * 24) || props.defaultTimeRange === 'All', 
+    [data, props.defaultTimeRange]);
+
     const filteredData = useMemo(() => {
         let hours = 0;
-        if (chartTimeRange !== 'Day') {
+
+        if (showAllData) {
+            return data.series;
+        } else if (chartTimeRange !== 'Day') {
             hours = parseInt(chartTimeRange.replace("h", ""), 10) * 1000 * 60 * 60;;
         } else {
             const now = new Date();
@@ -121,22 +130,44 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
                 data: s.data.filter(d => d.timestamp > Date.now() - hours && d.timestamp <= Date.now())
             };
         });
-    }, [chartTimeRange, data.series, clearedSeries]);
+    }, [chartTimeRange, data.series, clearedSeries, showAllData]);
     const chartRef = useRef<any>(null);
 
-    const chartData = {
-        datasets: filteredData.map((d, i) => ({
-            label: d.title,
-            data: d.data.map(d => ({ x: new Date(d.timestamp), y: d.value })),
-            fill: i === 0,
-            borderColor: d.color,
-            backgroundColor: `${d.color}33`, // Add 33 for 20% opacity
-            borderWidth: 1,
-            tension: 0.1,
-            cubicInterpolationMode: 'monotone',
-            pointRadius: 0 // Remove points
-        }))
-    };
+    // Calculate average for each dataset
+    const averages = useMemo(() => {
+        return filteredData.map(series => {
+            const sum = series.data.reduce((acc, point) => acc + point.value, 0);
+            return sum / series.data.length;
+        });
+    }, [filteredData]);
+
+    const chartData = useMemo(() => {
+        return {
+            datasets: [
+                ...filteredData.map((d, i) => ({
+                    label: d.title,
+                    data: d.data.map(d => ({ x: new Date(d.timestamp), y: d.value })),
+                    fill: i === 0,
+                    borderColor: d.color,
+                    backgroundColor: `${d.color}33`, // Add 33 for 20% opacity
+                    borderWidth: 1,
+                    tension: 0.1,
+                    cubicInterpolationMode: 'monotone',
+                    pointRadius: 0 // Remove points
+                })),
+                ...props.hideAverages ? [] : filteredData.map((d, i) => ({
+                    label: `${d.title} Average`,
+                    data: d.data.map(d => ({ x: new Date(d.timestamp), y: averages[i] })),
+                    type: 'line',
+                    borderColor: d.color,
+                    borderDash: [5, 5],
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    fill: false
+                }))
+            ]
+        };
+    }, [filteredData, averages, props.hideAverages]);
 
     useLayoutEffect(() => {
         if (chartRef.current && chartData.datasets[0]?.data.length > 0 && highlightMode) {
@@ -146,7 +177,7 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
                 chartData.datasets[0].data.length - 1;
             setTimeout(() => triggerTooltip(chartRef.current, index, datasetIndices), 100);
         }
-    }, [chartRef.current, chartData, highlightMode]);
+    }, [chartRef.current, data.series[0]?.data, highlightMode]);
 
     const options = {
         responsive: true,
@@ -161,7 +192,6 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
             },
             title: {
                 display: false,
-                // text: 'Power Production Over Time'
             },
             tooltip: {
                 mode: 'index',
@@ -172,13 +202,17 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
                 callbacks: {
                     title: function(context: any) {
                         const timestamp = context[0].raw.x;
-                        return format(new Date(timestamp), 'hh:mm'); // Customize the format as needed
+                        return format(new Date(timestamp), showAllData ? 'MM/dd' : 'hh:mm');
                     },
                     label: function(context: any) {
                         const label = context.dataset.label || '';
                         const value = context.raw.y;
                         if (value) {
-                            return formatWatt(value);
+                            if (label.includes('Average')) {
+                                return `Average: ${formatWatt(value)}`;
+                            } else {
+                                return formatWatt(value);
+                            }
                         }
                     }
                 }
@@ -196,27 +230,25 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
         },
         scales: {
             y: {
-                position: 'right', // Added this line to move y-axis to right
+                position: 'right',
                 title: {
                     display: false,
                 },
                 adapters: {
                     type: 'linear',
                     ticks: {
-                        // autoSkip: true,
-                        maxTicksLimit: 7, // Reduced from 10 to 5
+                        maxTicksLimit: 7,
                     }
                 },
                 border: {
                     dash: [2, 2],
                     display: false,
-                    // color: '#808080',
                 },
                 ticks: {
                     callback: function(value: any) {
                         return value / 1000 + ' kW';
                     },
-                    color: '#aaaaaa' // Added dark grey color for y-axis
+                    color: '#aaaaaa'
                 }
             },
             x: {
@@ -228,11 +260,11 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
                     display: false
                 },
                 ticks: {
-                    maxTicksLimit: 8, // Added to limit x-axis ticks
+                    maxTicksLimit: 8,
                     callback: function(value: any) {
-                        return format(new Date(value), 'HH:mm');
+                        return format(new Date(value), showAllData ? 'MM/dd' : 'HH:mm');
                     },
-                    color: '#aaaaaa' // Added dark grey color for y-axis
+                    color: '#aaaaaa'
                 }
             }
         },
@@ -249,7 +281,9 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
     return (
         <div className={styles.chartContainer}>
             <div className={styles.chart}>
-                <Line data={chartData as any} ref={chartRef} options={{...options, maintainAspectRatio: false} as any} />
+                {showAllData ? 
+                    <Bar data={chartData as any} ref={chartRef} options={{...options, maintainAspectRatio: false} as any} /> : 
+                    <Line data={chartData as any} ref={chartRef} options={{...options, maintainAspectRatio: false} as any} />}
             </div>
             {data.series.length > 1 &&
             <div style={{marginBottom: '1rem'}}>
@@ -264,13 +298,13 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
                     </label>
                 ))}
             </div>
-}
+            }
 
-            <div className={styles.chartTimeRange}>
-                {ChartTimeRanges.map(range => (
+            {!props.hideTimeRange && <div className={styles.chartTimeRange}>
+                {ChartTimeRanges.filter(range => range !== 'All').map(range => (
                     <button key={range} className={(chartTimeRange === range ? styles.selected : "") + " " + styles.chartButton} onClick={() => setChartTimeRange(range)}>{range}</button>
                 ))}
-            </div>
+            </div>}
         </div>
     );
 }

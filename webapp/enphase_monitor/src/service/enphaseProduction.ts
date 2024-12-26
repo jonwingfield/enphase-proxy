@@ -64,7 +64,7 @@ export interface ChartData {
 }
 
 
-async function fetchLast12HoursProductionData(): Promise<ChartData> {
+async function fetchTodayProductionData(): Promise<ChartData> {
     const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
         db: "solar",
@@ -94,14 +94,13 @@ async function fetchLast12HoursProductionData(): Promise<ChartData> {
 }
 
 async function fetchMaxDataForDay(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
-    const begin = new Date(new Date(date.getTime()).setHours(23, 0, 0));
-    const end = new Date(new Date(date.getTime()).setHours(23, 59, 0));
+    const begin = new Date(new Date(date.getTime()).setHours(1, 0, 0));
+    const end = new Date(new Date(date.getTime()).setHours(23, 59, 59));
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
         db: "solar",
         q: `SELECT max("productionWhToday") as productionWatts, max("consumptionWhToday") as consumptionWatts 
             FROM "solar"."autogen"."rooftop" 
-            WHERE time > '${begin.toISOString()}' and time < '${end.toISOString()}'
-            GROUP BY time(1d)`
+            WHERE time > '${begin.toISOString()}' and time < '${end.toISOString()}' and "productionWhToday" < 120000`
     }));
     const data = await response.json();
     return data.results[0].series[0].values.map((point: [string, number, number, number]) => ({
@@ -113,10 +112,14 @@ async function fetchMaxDataForDay(date: Date): Promise<{ timestamp: Date, produc
 }
 
 async function fetch7DayProductionData(): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
+    return await fetchMultiDayProductionData(7);
+}
+
+async function fetchMultiDayProductionData(numDays: number): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
     const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
 
     const lastSevenDays = [];
-    for (let i = 1; i < 8; i++) {
+    for (let i = numDays; i >= 0; i--) {
         lastSevenDays.push(await fetchMaxDataForDay(new Date(midnightToday.getTime() - (i * 24 * 60 * 60 * 1000))));
     }
 
@@ -159,4 +162,4 @@ async function fetchComparisonData(date: Date): Promise<{ timestamp: Date, produ
     })) ?? [];
 }
 
-export { fetchProductionData, fetchLast12HoursProductionData, fetch7DayProductionData, fetchComparisonFullDayData, fetchComparisonData };
+export { fetchProductionData, fetchTodayProductionData, fetch7DayProductionData, fetchComparisonFullDayData, fetchComparisonData, fetchMultiDayProductionData };

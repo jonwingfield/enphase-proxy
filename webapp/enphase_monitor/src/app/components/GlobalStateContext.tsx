@@ -12,6 +12,7 @@ export interface GlobalState {
     source: "home" | "office";
     batt_percent: number;
     teslaState: 'pluggedIn' | 'charging' | 'unplugged' | 'notHome';
+    billingCycleStartDate: string;
 }
 
 const DefaultGlobalState: GlobalState = {
@@ -23,6 +24,7 @@ const DefaultGlobalState: GlobalState = {
     source: "home",
     batt_percent: 0,
     teslaState: 'unplugged',
+    billingCycleStartDate: "2024-11-28",
 };
 
 export const GlobalStateContext = createContext<{
@@ -41,4 +43,16 @@ export function GlobalStateProvider({ children }: { children: React.ReactNode })
     const [globalState, setGlobalState] = useState<GlobalState>(DefaultGlobalState);
 
     return <GlobalStateContext.Provider value={{ globalState, setGlobalState }}>{children}</GlobalStateContext.Provider>;
+}
+
+export function calculateCost(globalState: GlobalState, totalInWh: number) {
+    const totalInKWh = totalInWh / 1000;
+    if (totalInWh === 0) {
+        return 0;
+    } else if (totalInKWh < 1000) {
+        return ((globalState.ratePerKWHUnder1000 / 100) * totalInKWh ).toFixed(2);
+    } else {
+        return (((globalState.ratePerKWHOver1000 / 100) * (totalInKWh - 1000)) + 
+            ((globalState.ratePerKWHUnder1000 / 100) * 1000)).toFixed(2);
+    }
 }

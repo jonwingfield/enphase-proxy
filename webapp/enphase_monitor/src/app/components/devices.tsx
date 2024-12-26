@@ -56,7 +56,7 @@ export function Devices({ backClicked, vue, vueKwh, solar, grid, solarKwh, gridK
     return <>
         <div className={styles.homeDetails}>
             <NavBar title="Devices" backClicked={backClicked}
-                rightButton={<a href="https://web.emporiaenergy.com" target="_blank" rel="noopener noreferrer"><EnergySavingsLeaf /></a>} />
+                rightButton={<a href="https://web.emporiaenergy.com" className={styles.rightButton} target="_blank" rel="noopener noreferrer"><EnergySavingsLeaf /></a>} />
             <SubNavBar items={subNavBarItems} selectedItem={selectedItem} onItemClicked={setSelectedItem} />
             <div className={styles.homeDetailsBody}>
                 {SankeyCached}

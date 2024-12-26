@@ -38,7 +38,7 @@ export async function getTeslaState(): Promise<TeslaState | null> {
                     last("odometer") as odometer, 
                     last("speed") as speed 
             FROM "tesla"."autogen"."state"
-            WHERE time > now() - 24h`
+            WHERE time > now() - 48h`
     }));
     const data = await response.json();
     
