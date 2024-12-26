@@ -199,13 +199,15 @@ div.picture {
 
     @media (max-width: 600px) {
         background-size: auto 598px; /* 57.5% of 1040px */
-        /* width:900px;
-        height: 400px; */
-        /* background-size: auto 700px;
-        width: 900px;
-        height: 400px; */
     }
-    
+
+    @media (max-width: 1170px) and (min-width: 901px) {
+        right: calc(-150px + (1170px - 100vw));
+    }
+
+    @media (max-width: 900px) and (min-width: 601px) {
+        right: calc(-200px + (1170px - 100vw));
+    }
 }
 .fade {
     position: absolute;
