@@ -9,8 +9,9 @@ import Chart from "./chart";
 import { fetchBatteryData, fetchBatteryDataForDay, fetchMultiDayBatteryData, fetchMultiDayOfficeProductionData, getLast12HoursOfficeProduction, OfficeProductionData } from "@/service/officeProduction";
 import { SubNavBar } from "./navBar";
 import { calculateCost, useGlobalState } from "./GlobalStateContext";
-import { differenceInDays, startOfMonth } from "date-fns";
+import { differenceInDays, isToday, startOfMonth } from "date-fns";
 import { ThemeColors } from "../theme";
+import DateSelection from "./dateSelection";
 
 export interface UsageDetailsProps {
     productionData: HomeProductionData | OfficeProductionData | null;
@@ -34,10 +35,12 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
     ] });
     const [source, setSource] = useState<Source>('solar');
     const [timeRange, setTimeRange] = useState<TimeRange>('Day');
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    const selectedDateIsToday = isToday(selectedDate);
 
     const fetchData = () => {   
         if (timeRange === 'Day') {
-            fetchTodayProductionData().then(({series}) => {
+            fetchTodayProductionData(selectedDate).then(({series}) => {
                 setRooftopChartData({
                     series: [
                         { title: "Production", color: ThemeColors.production, data: series[0].data },
@@ -76,9 +79,9 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
             getLast12HoursOfficeProduction().then(({series}) => {
                 setOfficeChartData({
                     series: [
-                        { title: "Production", color: "#ffcc00", data: series[0].data },
-                        { title: "Consumption", color: "#ff0000", data: series[1].data },
-                        { title: "Grid", color: "#4b2fff", data: series[0].data.map((d, i) => ({ timestamp: d.timestamp, value: series[1].data[i].value - d.value })) }
+                        { title: "Production", color: ThemeColors.production, data: series[0].data },
+                        { title: "Consumption", color: ThemeColors.consumption, data: series[1].data },
+                        { title: "Grid", color: ThemeColors.grid, data: series[0].data.map((d, i) => ({ timestamp: d.timestamp, value: series[1].data[i].value - d.value })) }
                     ]
                 });
             });
@@ -134,7 +137,9 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
         }
     };
 
-    useEffect(() => { fetchData(); }, [timeRange]);
+    useEffect(() => { 
+        fetchData(); 
+    }, [timeRange, selectedDate]);
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -200,9 +205,16 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                 </div>
                 <div className={styles.chartContainer}>
                     <Chart data={{ series: source === 'battery' ? batteryChartData.series : [chartData.series[seriesIndex]]}} 
-                        highlightMode="max" defaultTimeRange="Day" hideAverages={timeRange === 'Day'} hideTimeRange={timeRange !== 'Day'}
+                        highlightMode="max" 
+                        defaultTimeRange={timeRange === 'Day' && selectedDateIsToday ? 'Day' : 'All'} 
+                        type={timeRange === 'Day' ? 'line' : 'bar'}
+                        hideAverages={timeRange === 'Day'} 
+                        hideTimeRange={timeRange !== 'Day' || !selectedDateIsToday}
                         suffix={source === 'battery' ? (timeRange === 'Day' ? "V" : "%") : (timeRange !== 'Day' ? "h" : undefined)} />
                 </div>
+                {timeRange === 'Day' && <div className={styles.dateSelectionContainer}>
+                    <DateSelection date={selectedDate} setDate={setSelectedDate} />
+                </div>}
             </section>
     );
 

@@ -51,3 +51,7 @@
 .sourceIcon {
     cursor: pointer;
 }
+
+.dateSelectionContainer {
+    margin: 20px 0;
+}

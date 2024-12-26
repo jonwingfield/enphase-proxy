@@ -1,8 +1,8 @@
 export const ThemeColors = {
     production: "#ffcc00",
-    consumption: "#ff0000",
-    grid: "#4b2fff",
+    consumption: "#b10000",
+    grid: "#3a25c4",
     solar: "#ffcc00",
-    home: "#ff0000",
+    home: "#b10000",
     powerwall: "#00d0a6",
 }

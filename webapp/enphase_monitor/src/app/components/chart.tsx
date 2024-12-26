@@ -108,7 +108,9 @@ type ChartProps = {
     defaultTimeRange?: ChartTimeRange, 
     highlightMode?: 'max' | 'last' , 
     hideTimeRange?: boolean, 
-    hideAverages?: boolean, suffix?: string
+    hideAverages?: boolean, 
+    suffix?: string,
+    type?: 'line' | 'bar'
 }
 
 export default function Chart(props: ChartProps) {
@@ -116,9 +118,7 @@ export default function Chart(props: ChartProps) {
     const [chartTimeRange, setChartTimeRange] = useState<ChartTimeRange>(props.defaultTimeRange || "6h");
     const [clearedSeries, setClearedSeries] = useState<string[]>([]);
 
-    const showAllData = useMemo(() => 
-        data.series[0]?.data[0]?.timestamp < (Date.now() - 1000 * 60 * 60 * 24) || props.defaultTimeRange === 'All', 
-    [data, props.defaultTimeRange]);
+    const showAllData = useMemo(() => props.defaultTimeRange === 'All', [props.defaultTimeRange]);
 
     const filteredData = useMemo(() => {
         let hours = 0;
@@ -294,7 +294,7 @@ export default function Chart(props: ChartProps) {
     return (
         <div className={styles.chartContainer}>
             <div className={styles.chart}>
-                {showAllData ? 
+                {props.type === 'bar'  ? 
                     <Bar data={chartData as any} ref={chartRef} options={{...options, maintainAspectRatio: false} as any} /> : 
                     <Line data={chartData as any} ref={chartRef} options={{...options, maintainAspectRatio: false} as any} />}
             </div>

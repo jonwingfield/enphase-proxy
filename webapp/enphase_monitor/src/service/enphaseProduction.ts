@@ -1,3 +1,5 @@
+import { ThemeColors } from "@/app/theme";
+
 export interface EnphaseProductionData {
     production: {
         type: "inverters" | "eim";
@@ -64,27 +66,28 @@ export interface ChartData {
 }
 
 
-async function fetchTodayProductionData(): Promise<ChartData> {
-    const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
+async function fetchTodayProductionData(date: Date = new Date()): Promise<ChartData> {
+    const midnightToday = new Date(new Date(date).setHours(0, 0, 0, 0));
+    const midnightTomorrow = new Date(new Date(date).setHours(23, 59, 59, 999));
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
         db: "solar",
         q: `SELECT mean("productionWatts") as productionWatts, mean("consumptionWatts") as consumptionWatts 
             FROM "solar"."autogen"."rooftop" 
-            WHERE time > '${midnightToday.toISOString()}' and time < now() 
+            WHERE time > '${midnightToday.toISOString()}' and time < '${midnightTomorrow.toISOString()}'
             GROUP BY time(1m)`
     }));
     const data = await response.json();
     return {
         series: [{
             title: "Production",
-            color: "#ffcc00",
+            color: ThemeColors.production,
             data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
                 timestamp: new Date(point[0]).getTime(),
                 value: point[1],
             })),
         }, {
             title: "Consumption",
-            color: "#ff0000",
+            color: ThemeColors.consumption,
             data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
                 timestamp: new Date(point[0]).getTime(),
                 value: point[2],

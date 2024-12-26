@@ -1,3 +1,4 @@
+import { ThemeColors } from "@/app/theme";
 import { ChartData } from "./enphaseProduction";
 
 export interface OfficeProductionData {
@@ -52,14 +53,14 @@ export async function getLast12HoursOfficeProduction(): Promise<ChartData> {
     return {
         series: [{
             title: "Production",
-            color: "#ffcc00",
+            color: ThemeColors.production,
             data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
                 timestamp: new Date(point[0]).getTime(),
                 value: point[1],
             })),
         }, {
             title: "Consumption",
-            color: "#ff0000",
+            color: ThemeColors.consumption,
             data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
                 timestamp: new Date(point[0]).getTime(),
                 value: point[2],

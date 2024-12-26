@@ -6,13 +6,20 @@
   --status-ok: #00d0a6;
   --status-warning: #ffc107;
   --status-error: #f44336;
+
+  --production: #ffcc00;
+  --consumption: #b10000;
+  --grid: #3a25c4;
+  --solar: #ffcc00;
+  --home: #b10000;
+  --powerwall: #00d0a6;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #435870;
     --foreground: #ededed;
-    --section-background: #819bb9;
+    --section-background: #5b6e83;
   }
 }
 
