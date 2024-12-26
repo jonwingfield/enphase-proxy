@@ -3,7 +3,7 @@ import { useEffect, useMemo } from "react";
 import { ChartData } from "@/service/enphaseProduction";
 import { useState } from "react";
 import styles from './usageDetails.module.css';
-import { CellTowerOutlined, HomeOutlined, WbSunnyOutlined } from "@mui/icons-material";
+import { Battery2BarOutlined, CellTowerOutlined, HomeOutlined, WbSunnyOutlined } from "@mui/icons-material";
 import { formatWatt, HomeProductionData } from "./useProduction";
 import Chart from "./chart";
 import { fetchMultiDayOfficeProductionData, getLast12HoursOfficeProduction, OfficeProductionData } from "@/service/officeProduction";

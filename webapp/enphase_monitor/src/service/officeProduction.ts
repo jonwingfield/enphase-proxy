@@ -73,7 +73,7 @@ export async function fetchMaxDataForDay(date: Date): Promise<{ timestamp: Date,
     const end = new Date(new Date(date.getTime()).setHours(23, 59, 59));
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
         db: "solar",
-        q: `SELECT max("panel_watts") as panel_watts, max("load_watts") as load_watts 
+        q: `SELECT max("panel_kwh")*1000 as panel_wh, max("load_kwh")*1000 as load_wh 
             FROM "energy"."infinite"."downsampled_energy" 
             WHERE time > '${begin.toISOString()}' and time < '${end.toISOString()}'`
     }));
