@@ -17,7 +17,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import styles from "./chart.module.css";
 import 'chartjs-adapter-date-fns';
 import { ChartData } from "@/service/enphaseProduction";
-import { format } from 'date-fns';
+import { differenceInHours, format } from 'date-fns';
 import { formatWatt } from "./useProduction";
 
 
@@ -120,11 +120,11 @@ export default function Chart(props: ChartProps) {
 
     const showAllData = useMemo(() => props.defaultTimeRange === 'All', [props.defaultTimeRange]);
 
-    const filteredData = useMemo(() => {
+    const { filteredData, isSingleDay } = useMemo(() => {
         let hours = 0;
 
         if (showAllData) {
-            return data.series;
+            return { filteredData: data.series, isSingleDay: false };
         } else if (chartTimeRange !== 'Day') {
             hours = parseInt(chartTimeRange.replace("h", ""), 10) * 1000 * 60 * 60;;
         } else {
@@ -132,12 +132,17 @@ export default function Chart(props: ChartProps) {
             hours = now.getHours() * 1000 * 60 * 60 + now.getMinutes() * 1000 * 60 + now.getSeconds() * 1000;
         }
 
-        return data.series.filter(s => !clearedSeries.includes(s.title)).map(s => {
+        const filtered =  data.series.filter(s => !clearedSeries.includes(s.title)).map(s => {
             return {
                 ...s,
                 data: s.data.filter(d => d.timestamp > Date.now() - hours && d.timestamp <= Date.now())
             };
         });
+
+        const isSingleDay = filtered[0]?.data?.length ? 
+            differenceInHours(filtered[0].data[0].timestamp, filtered[0].data[filtered[0].data.length - 1].timestamp) < 24 : false;
+
+        return { filteredData: filtered, isSingleDay };
     }, [chartTimeRange, data.series, clearedSeries, showAllData]);
     const chartRef = useRef<any>(null);
 
@@ -215,7 +220,7 @@ export default function Chart(props: ChartProps) {
                 callbacks: {
                     title: function(context: any) {
                         const timestamp = context[0].raw.x;
-                        return format(new Date(timestamp), showAllData ? 'MM/dd' : 'hh:mm');
+                        return format(new Date(timestamp), !isSingleDay ? 'MM/dd' : 'hh:mm');
                     },
                     label: function(context: any) {
                         const label = context.dataset.label || '';
@@ -275,7 +280,7 @@ export default function Chart(props: ChartProps) {
                 ticks: {
                     maxTicksLimit: 8,
                     callback: function(value: any) {
-                        return format(new Date(value), showAllData ? 'MM/dd' : 'HH:mm');
+                        return format(new Date(value), !isSingleDay ? 'MM/dd' : 'HH:mm');
                     },
                     color: '#aaaaaa'
                 }
