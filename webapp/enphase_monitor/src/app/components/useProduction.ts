@@ -73,7 +73,7 @@ export function formatWatt(watt: number) {
         return "--";
     }
     if (watt > 1000 || watt < -1000) {
-        return `${(watt / 1000).toFixed(1)}kW`;
+        return `${(watt / 1000).toFixed(1)} kW`;
     }
-    return `${watt.toFixed(0)}W`;
+    return `${watt.toFixed(0)} W`;
 }

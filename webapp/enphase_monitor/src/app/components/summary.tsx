@@ -9,6 +9,7 @@ import { useTesla } from "./useTesla";
 import { capitalize } from "@mui/material";
 import { calculateGreenhouseUsage, useVue } from "./useVue";
 import { Devices } from "./devices";
+import { UsageDetails } from "./usageDetails";
 
 export default function Summary() {
     const { homeProductionData, officeProductionData } = useProduction();
@@ -207,6 +208,7 @@ export default function Summary() {
             <div className="fade"> </div>
             </div>
             </div>
+            <UsageDetails productionData={productionData} />
         </main>
 
         {showHome && vue && productionData && 'grid_wh' in productionData &&

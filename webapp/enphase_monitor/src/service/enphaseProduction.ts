@@ -65,25 +65,26 @@ export interface ChartData {
 
 
 async function fetchLast12HoursProductionData(): Promise<ChartData> {
+    const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
         db: "solar",
         q: `SELECT mean("productionWatts") as productionWatts, mean("consumptionWatts") as consumptionWatts 
             FROM "solar"."autogen"."rooftop" 
-            WHERE time > now() - 12h 
+            WHERE time > '${midnightToday.toISOString()}' and time < now() 
             GROUP BY time(1m)`
     }));
     const data = await response.json();
     return {
         series: [{
             title: "Production",
-            color: "green",
+            color: "#ffcc00",
             data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
                 timestamp: new Date(point[0]).getTime(),
                 value: point[1],
             })),
         }, {
             title: "Consumption",
-            color: "red",
+            color: "#ff0000",
             data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
                 timestamp: new Date(point[0]).getTime(),
                 value: point[2],

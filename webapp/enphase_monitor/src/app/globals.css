@@ -1,6 +1,7 @@
 :root {
   --background: #e4e6ed;
   --foreground: #171717;
+  --section-background: #ffffff;
   --primary-cta: #359aff;
   --status-ok: #00d0a6;
   --status-warning: #ffc107;
@@ -11,6 +12,7 @@
   :root {
     --background: #435870;
     --foreground: #ededed;
+    --section-background: #819bb9;
   }
 }
 
@@ -105,7 +107,7 @@ main {
   flex-direction: column;
   gap: 32px;
   grid-row-start: 2;
-  width: 375px;
+  width: calc(100vw - 40px);
   /* fixes weird z-index issues in safari */
 }
 

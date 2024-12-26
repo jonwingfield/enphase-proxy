@@ -34,7 +34,7 @@ export default function RootLayout({
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
                 <meta name="apple-mobile-web-app-title" content="Powerflow" />
                 <meta name="theme-color" content="#e4e6ed" media="(prefers-color-scheme: light)" />
-                <meta name="theme-color" content="#435870" media="(prefers-color-scheme: dark)" />
+                <meta name="theme-color" content="#3e536c" media="(prefers-color-scheme: dark)" />
                 <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" />
                 <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
                 <link rel="apple-touch-startup-image" href="/splash.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" />

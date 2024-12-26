@@ -1,3 +1,5 @@
+import { ChartData } from "./enphaseProduction";
+
 export interface OfficeProductionData {
     panel_watts: number;
     panel_wh: number;
@@ -36,3 +38,68 @@ export async function getOfficeProduction(): Promise<OfficeProductionData | null
     }
     return result;
 }
+
+export async function getLast12HoursOfficeProduction(): Promise<ChartData> {
+    const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
+    const response = await fetch("/influxdb/query?" + new URLSearchParams({
+        db: "solar",
+        q: `SELECT mean("panel_watts") as panel_watts, mean("load_watts") as load_watts 
+            FROM "energy"."two weeks"."energy" 
+            WHERE time > '${midnightToday.toISOString()}' and time < now() 
+            GROUP BY time(1m)`
+    }));
+    const data = await response.json();
+    return {
+        series: [{
+            title: "Production",
+            color: "#ffcc00",
+            data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
+                timestamp: new Date(point[0]).getTime(),
+                value: point[1],
+            })),
+        }, {
+            title: "Consumption",
+            color: "#ff0000",
+            data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
+                timestamp: new Date(point[0]).getTime(),
+                value: point[2],
+            })),
+        }]
+    };
+}
+
+export async function fetchMaxDataForDay(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
+    const begin = new Date(new Date(date.getTime()).setHours(23, 0, 0));
+    const end = new Date(new Date(date.getTime()).setHours(23, 59, 0));
+    const response = await fetch("/influxdb/query?" + new URLSearchParams({
+        db: "solar",
+        q: `SELECT max("panel_watts") as panel_watts, max("load_watts") as load_watts 
+            FROM "energy"."infinite"."downsampled_energy" 
+            WHERE time > '${begin.toISOString()}' and time < '${end.toISOString()}'
+            GROUP BY time(1d)`
+    }));
+    const data = await response.json();
+    return data.results[0].series[0].values.map((point: [string, number, number, number]) => ({
+        timestamp: new Date(point[0]),
+        productionWatts: point[1],
+        consumptionWatts: point[2],
+    })).slice(-1);
+}
+
+export async function fetchComparisonFullDayData(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number } | undefined> {
+    const oneAmOnDate = new Date(new Date(new Date(date).setHours(1, 0, 0, 0)));
+    const currentTimeOnDate = new Date(new Date(oneAmOnDate).setHours(new Date().getHours(), new Date().getMinutes()));
+
+    const response = await fetch("/influxdb/query?" + new URLSearchParams({
+        db: "solar",
+        q: `SELECT max("panel_watts") as panel_watts, max("load_watts") as load_watts 
+            FROM "energy"."infinite"."downsampled_energy" 
+            WHERE time > '${oneAmOnDate.toISOString()}' and time < '${currentTimeOnDate.toISOString()}'`
+    }));
+    const data = await response.json();
+    return data.results[0].series?.[0]?.values.map((point: [string, number, number]) => ({
+        timestamp: new Date(point[0]),
+        productionWatts: point[1],
+        consumptionWatts: point[2],
+    }))[0] ?? undefined;
+} 

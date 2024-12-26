@@ -72,14 +72,14 @@ async function fetchLast12HoursProductionData(): Promise<ChartData> {
     return {
         series: [{
             title: "Production",
-            color: "green",
+            color: "#ffcc00",
             data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
                 timestamp: new Date(point[0]).getTime(),
                 value: point[1],
             })),
         }, {
             title: "Consumption",
-            color: "red",
+            color: "#FF0000",
             data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
                 timestamp: new Date(point[0]).getTime(),
                 value: point[2],
@@ -157,9 +157,9 @@ async function fetchComparisonData(date: Date): Promise<{ timestamp: Date, produ
 export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ratePerKWHOver1000, visible }: { autoRefresh?: boolean, ratePerKWHUnder1000: number, ratePerKWHOver1000: number, visible: boolean  }) {
     const [productionData, setProductionData] = useState<ProductionData | null>(null);
     const [chartData, setChartData] = useState<ChartData>({ series: [
-        { title: "Production", color: "green", data: [] },
-        { title: "Consumption", color: "red", data: [] },
-        { title: "Comparison", color: "blue", data: [] }
+        { title: "Production", color: "#00FF00", data: [] },
+        { title: "Consumption", color: "#FF0000", data: [] },
+        { title: "Comparison", color: "#0000FF", data: [] }
     ] });
     const [sevenDayData, setSevenDayData] = useState<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]>([]);
     const [comparisonFullDayData, setComparisonFullDayData] = useState<{ timestamp: Date, productionWatts: number, consumptionWatts: number } | undefined>(undefined);
@@ -236,7 +236,7 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
                 chartData.series[1], 
                 { 
                     title: comparisonDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }),
-                    color: "blue",
+                    color: "#0000FF",
                     data: comparisonData.map(x => ({ timestamp: x.timestamp.getTime() + (daysSinceComparisonDate * 24 * 60 * 60 * 1000), value: x.productionWatts }))
                 }]
         };
@@ -354,6 +354,6 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
             </tbody>
         </table>
 
-        <Chart data={chartDataWithComparison} defaultTimeRange="1h" />
+        <Chart data={chartDataWithComparison} defaultTimeRange="1h" highlightMode="last" />
     </div>;
 }

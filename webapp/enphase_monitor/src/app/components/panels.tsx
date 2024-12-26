@@ -195,14 +195,14 @@ export default function Panels({ autoRefresh = true, serialNumber }: { autoRefre
         return {
             series: [{
                 title: "Production",
-                color: "green",
+                color: "#ffcc00",
                 data: historicalPanelData.map(p => ({
                     timestamp: p.lastReportDate * 1000,
                     value: p.lastReportWatts,
                 })).filter(p => p.value !== null),
             }, {
                 title: selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }),
-                color: "blue",
+                color: "#0000ff",
                 data: comparisonPanelData.map(p => ({
                     timestamp: p.lastReportDate * 1000 + (daysSinceComparisonDate * 24 * 60 * 60 * 1000),
                     value: p.lastReportWatts,

@@ -1,0 +1,51 @@
+
+.summarySection {
+    background-color: var(--section-background);
+    border-radius: 10px;
+    width: 100%;
+    padding: 10px;
+    margin: 0;
+    margin-top: -400px;
+    display: flex;
+    flex-direction: column;
+
+    @media (max-width: 600px) {
+        margin-top: -100px;
+    }
+}
+
+.chartContainer {
+    display: flex;
+    /* height: 400px; */
+}
+
+.sourceToggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 5px;
+    color: var(--gray-alpha-500);
+    border-top: 1px solid var(--gray-alpha-200);
+    padding-top: 20px;
+}
+
+.sourceInfo {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    /* justify-content: space-between; */
+    gap: 8px;
+}
+
+.sourceToggle > :not(.sourceInfo) {
+    width: 45px;
+}
+
+.sourceToggle > :not(.sourceInfo) > svg {
+    color: var(--gray-alpha-500);
+}
+
+.sourceIcon {
+    cursor: pointer;
+}
