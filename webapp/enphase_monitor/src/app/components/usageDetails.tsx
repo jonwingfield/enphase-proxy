@@ -6,7 +6,7 @@ import styles from './usageDetails.module.css';
 import { Battery2BarOutlined, CellTowerOutlined, HomeOutlined, WbSunnyOutlined } from "@mui/icons-material";
 import { formatWatt, HomeProductionData } from "./useProduction";
 import Chart from "./chart";
-import { fetchMultiDayOfficeProductionData, getLast12HoursOfficeProduction, OfficeProductionData } from "@/service/officeProduction";
+import { fetchBatteryData, fetchBatteryDataForDay, fetchMultiDayBatteryData, fetchMultiDayOfficeProductionData, getLast12HoursOfficeProduction, OfficeProductionData } from "@/service/officeProduction";
 import { SubNavBar } from "./navBar";
 import { calculateCost, useGlobalState } from "./GlobalStateContext";
 import { differenceInDays, startOfMonth } from "date-fns";
@@ -19,7 +19,7 @@ export interface UsageDetailsProps {
 
 const timeRanges = ['Day', 'Billing Cycle', 'Month'];
 type TimeRange = typeof timeRanges[number];
-type Source = 'solar' | 'home' | 'grid';
+type Source = 'solar' | 'home' | 'grid' | 'battery';
 
 export function UsageDetails({ productionData }: UsageDetailsProps) {
     const { globalState } = useGlobalState();
@@ -28,6 +28,9 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
     ] });
     const [officeChartData, setOfficeChartData] = useState<ChartData>({ series: [
         { title: "Production", color: ThemeColors.production, data: [] },
+    ] });
+    const [batteryChartData, setBatteryChartData] = useState<ChartData>({ series: [
+        { title: "Battery Voltage", color: ThemeColors.powerwall, data: [] },
     ] });
     const [source, setSource] = useState<Source>('solar');
     const [timeRange, setTimeRange] = useState<TimeRange>('Day');
@@ -104,13 +107,34 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                     ]
                 });
             });
+        }
 
+        if (timeRange === 'Day') {
+            fetchBatteryData().then(data => {
+                setBatteryChartData({
+                    series: [{ title: "Battery Voltage", color: ThemeColors.powerwall, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.value })) }],
+                });
+            });
+        } else if (timeRange === 'Billing Cycle') {
+            const billingStartDate = new Date(globalState.billingCycleStartDate + 'T08:00:00Z');
+            const daysAgo = differenceInDays(new Date(), billingStartDate);
+            fetchMultiDayBatteryData(daysAgo).then(data => {
+                setBatteryChartData({
+                    series: [{ title: "Battery Voltage", color: ThemeColors.powerwall, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.value })) }],
+                });
+            });
+        } else if (timeRange === 'Month') {
+            const firstDayOfMonth = startOfMonth(new Date());
+            const daysAgo = differenceInDays(new Date(), firstDayOfMonth);
+            fetchMultiDayBatteryData(daysAgo).then(data => {
+                setBatteryChartData({
+                    series: [{ title: "Battery Voltage", color: ThemeColors.powerwall, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.value })) }],
+                });
+            });
         }
     };
 
     useEffect(() => { fetchData(); }, [timeRange]);
-
-    const seriesIndex = source === 'solar' ? 0 : source === 'home' ? 1 : 2;
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -119,6 +143,14 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
 
         return () => clearTimeout(timeout);
     }, [rooftopChartData, timeRange]);
+
+    useEffect(() => {
+        if (globalState.source !== 'office' && source === 'battery') {
+            setSource('solar');
+        }
+    }, [globalState.source, source]);
+
+    const seriesIndex = source === 'solar' ? 0 : source === 'home' ? 1 : 2;
 
     const chartData = globalState.source === 'home' ? rooftopChartData : officeChartData;
 
@@ -151,20 +183,25 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                                 {source === 'home' && globalState.source === 'home' && "Home Usage"}
                                 {source === 'home' && globalState.source === 'office' && "Office Usage"}
                                 {source === 'grid' && "Net Power Usage"}
+                                {source === 'battery' && "Battery Voltage"}
                             </div>
                             {productionData &&
                                 <div>
                                     {source === 'solar' && <h4>{formatWatt(total)}h &middot; ${((globalState.ratePerKWHOver1000 / 100) * total / 1000 ).toFixed(2)}</h4>}
-                                    {source !== 'solar' && <h4>{formatWatt(total)}h &middot; ${calculateCost(globalState, total)}</h4>}
+                                    {source !== 'solar' && source !== 'battery' && <h4>{formatWatt(total)}h &middot; ${calculateCost(globalState, total)}</h4>}
+                                    {source === 'battery' && 'batt_percent' in productionData && <h4>{productionData.batt_percent.toFixed(0)}% &middot; {(productionData.batt_v.toFixed(2))}V</h4>}
                                 </div>
                             }
                         </div>
                     <WbSunnyOutlined onClick={() => setSource('solar')} className={styles.sourceIcon} style={{ color: source === 'solar' ? ThemeColors.production : undefined }} />
                     <HomeOutlined onClick={() => setSource('home')} className={styles.sourceIcon} style={{ color: source === 'home' ? ThemeColors.consumption : undefined }} />
                     <CellTowerOutlined onClick={() => setSource('grid')} className={styles.sourceIcon} style={{ color: source === 'grid' ? ThemeColors.grid : undefined }} />
+                    {globalState.source === 'office' && <Battery2BarOutlined onClick={() => setSource('battery')} className={styles.sourceIcon} style={{ color: source === 'battery' ? ThemeColors.powerwall : undefined }} />}
                 </div>
                 <div className={styles.chartContainer}>
-                    <Chart data={{ series: [chartData.series[seriesIndex]]}} highlightMode="max" defaultTimeRange="Day" hideAverages={timeRange === 'Day'} hideTimeRange={timeRange !== 'Day'} />
+                    <Chart data={{ series: source === 'battery' ? batteryChartData.series : [chartData.series[seriesIndex]]}} 
+                        highlightMode="max" defaultTimeRange="Day" hideAverages={timeRange === 'Day'} hideTimeRange={timeRange !== 'Day'}
+                        suffix={source === 'battery' ? (timeRange === 'Day' ? "V" : "%") : (timeRange !== 'Day' ? "h" : undefined)} />
                 </div>
             </section>
     );

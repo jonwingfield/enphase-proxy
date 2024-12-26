@@ -13,7 +13,7 @@ import {
   Filler,
   ChartOptions
 } from 'chart.js';
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import styles from "./chart.module.css";
 import 'chartjs-adapter-date-fns';
 import { ChartData } from "@/service/enphaseProduction";
@@ -103,8 +103,16 @@ function triggerTooltip(chart: any, index: number, datasetIndices: number[]) {
 type ChartTimeRange = "1h" | "2h" | "3h" | "6h" | "12h" | "Day" | "All";
 const ChartTimeRanges: ChartTimeRange[] = ["1h", "2h", "3h", "6h", "12h", "Day", "All"];
 
-export default function Chart(props: { data: ChartData, defaultTimeRange?: ChartTimeRange, highlightMode?: 'max' | 'last' , hideTimeRange?: boolean, hideAverages?: boolean}) {
-    const { data, highlightMode } = props;
+type ChartProps = { 
+    data: ChartData,    
+    defaultTimeRange?: ChartTimeRange, 
+    highlightMode?: 'max' | 'last' , 
+    hideTimeRange?: boolean, 
+    hideAverages?: boolean, suffix?: string
+}
+
+export default function Chart(props: ChartProps) {
+    const { data, highlightMode, suffix } = props;
     const [chartTimeRange, setChartTimeRange] = useState<ChartTimeRange>(props.defaultTimeRange || "6h");
     const [clearedSeries, setClearedSeries] = useState<string[]>([]);
 
@@ -179,6 +187,11 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
         }
     }, [chartRef.current, data.series[0]?.data, highlightMode]);
 
+    const formatValue = useCallback((value: number) => {
+        return suffix === 'h' ? formatWatt(value) + 'h' : 
+            (suffix ? (value.toFixed(2) + " "  + suffix) : formatWatt(value));
+    }, [suffix]);
+
     const options = {
         responsive: true,
         layout: {
@@ -209,9 +222,9 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
                         const value = context.raw.y;
                         if (value) {
                             if (label.includes('Average')) {
-                                return `Average: ${formatWatt(value)}`;
+                                return `Average: ${formatValue(value)}`;
                             } else {
-                                return formatWatt(value);
+                                return formatValue(value);
                             }
                         }
                     }
@@ -246,7 +259,7 @@ export default function Chart(props: { data: ChartData, defaultTimeRange?: Chart
                 },
                 ticks: {
                     callback: function(value: any) {
-                        return value / 1000 + ' kW';
+                        return formatValue(value);
                     },
                     color: '#aaaaaa'
                 }

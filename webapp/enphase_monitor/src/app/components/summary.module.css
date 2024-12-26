@@ -52,8 +52,9 @@
 }
 
 .powerwall {
-    right: 60px;
-    top: 589px;
+    right: 420px;
+    top: 689px;
+    width: 140px;
 }
 
 .tesla {
