@@ -379,7 +379,7 @@ async function fetchAndPostData() {
 }
 
 
-tessie.auth('CJEwpX4szmjKdmRdAoDzaCDG9dzAVev5');
+tessie.auth(process.env.TESLA_API_KEY);
 
 fetchAndPostData();
 setInterval(fetchAndPostData, 60 * 1000);
