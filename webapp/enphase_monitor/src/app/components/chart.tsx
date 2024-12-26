@@ -124,7 +124,9 @@ export default function Chart(props: ChartProps) {
         let hours = 0;
 
         if (showAllData) {
-            return { filteredData: data.series, isSingleDay: false };
+            const isSingleDay = data.series[0]?.data?.length ? 
+                differenceInHours(data.series[0].data[data.series[0].data.length - 1].timestamp, data.series[0].data[0].timestamp) < 25 : false;
+            return { filteredData: data.series, isSingleDay };
         } else if (chartTimeRange !== 'Day') {
             hours = parseInt(chartTimeRange.replace("h", ""), 10) * 1000 * 60 * 60;;
         } else {
@@ -140,7 +142,7 @@ export default function Chart(props: ChartProps) {
         });
 
         const isSingleDay = filtered[0]?.data?.length ? 
-            differenceInHours(filtered[0].data[0].timestamp, filtered[0].data[filtered[0].data.length - 1].timestamp) < 24 : false;
+            differenceInHours(filtered[0].data[filtered[0].data.length - 1].timestamp, filtered[0].data[0].timestamp) < 25 : false;
 
         return { filteredData: filtered, isSingleDay };
     }, [chartTimeRange, data.series, clearedSeries, showAllData]);
@@ -278,7 +280,7 @@ export default function Chart(props: ChartProps) {
                     display: false
                 },
                 ticks: {
-                    maxTicksLimit: 8,
+                    maxTicksLimit: 6,
                     callback: function(value: any) {
                         return format(new Date(value), !isSingleDay ? 'MM/dd' : 'HH:mm');
                     },
