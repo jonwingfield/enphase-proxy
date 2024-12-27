@@ -167,7 +167,6 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
     const autoRefreshRef = useRef<boolean>(autoRefresh);
     const [comparisonDate, setComparisonDate] = useState<Date>(new Date(new Date().setDate(new Date().getDate() - 1)));
     const [comparisonData, setComparisonData] = useState<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]>([]);
-    const { globalState } = useGlobalState();
 
     const updateHistoricalData = useCallback((comparisonDate: Date) => {
         fetchLast12HoursProductionData().then(data => {
@@ -328,6 +327,6 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
             </tbody>
         </table>
 
-        <Chart data={chartDataWithComparison} defaultTimeRange="1h" highlightMode="last" />
+        <Chart data={chartDataWithComparison} defaultTimeRange="1h" highlightMode="last" hideAverages />
     </div>;
 }

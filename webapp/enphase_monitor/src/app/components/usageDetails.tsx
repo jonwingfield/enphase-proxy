@@ -11,6 +11,8 @@ import { calculateCost, useGlobalState } from "./GlobalStateContext";
 import { differenceInDays, isToday, startOfMonth } from "date-fns";
 import { ThemeColors } from "../theme";
 import DateSelection from "./dateSelection";
+import { useAsyncState } from "./helpers";
+import { getDailyData } from "@/service/pvwatts";
 
 export interface UsageDetailsProps {
     productionData: HomeProductionData | OfficeProductionData | null;
@@ -42,6 +44,11 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
     const selectedDateIsToday = isToday(selectedDate);
     const [chartType, setChartType] = useState<'line' | 'bar'>('line');
     const [maxUsageForDay, setMaxUsageForDay] = useState<number>(0);
+    const [enableDailyData, setEnableDailyData] = useState<'none' | 'ideal' | 'shaded'>('none');
+
+    const [dailyData] = useAsyncState(() => 
+        enableDailyData !== 'none' ? getDailyData(selectedDate) : Promise.resolve(undefined), 
+    [selectedDate, enableDailyData]);
 
     const fetchData = (type: 'home' | 'office' | 'battery') => {   
         if (type === 'home') {
@@ -212,7 +219,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                 <SubNavBar items={timeRanges} selectedItem={timeRange} onItemClicked={setTimeRange} />
                 <div className={styles.sourceToggle}>
                     <div className={styles.sourceInfo}>
-                            <div>
+                            <div onClick={() => setEnableDailyData(prev => prev === 'none' ? 'ideal' : prev === 'ideal' ? 'shaded' : 'none')}>
                                 {source === 'solar' && "Total PV Generation"}
                                 {source === 'home' && globalState.source === 'home' && "Home Usage"}
                                 {source === 'home' && globalState.source === 'office' && "Office Usage"}
@@ -226,6 +233,11 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                                     {source === 'battery' && 'batt_percent' in productionData && <h4>{productionData.batt_percent.toFixed(0)}% &middot; {(productionData.batt_v.toFixed(2))}V</h4>}
                                 </div>
                             }
+                            {enableDailyData !== 'none' && dailyData && 
+                            <div>
+                                {enableDailyData === 'ideal' && <h4>Ideal: {formatWatt(dailyData[0]["Ideal Daily Output (W)"])}h</h4>}
+                                {enableDailyData === 'shaded'  && <h4>Shaded: {formatWatt(dailyData[0]["Shaded Daily Output (W)"])}h</h4>}
+                            </div>}
                         </div>
                     <WbSunnyOutlined onClick={() => setSource('solar')} className={styles.sourceIcon} style={{ color: source === 'solar' ? ThemeColors.production : undefined }} />
                     <HomeOutlined onClick={() => setSource('home')} className={styles.sourceIcon} style={{ color: source === 'home' ? ThemeColors.consumption : undefined }} />
@@ -239,6 +251,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                         type={chartType}
                         hideAverages={chartType === 'line'} 
                         hideTimeRange={chartType === 'bar' || !selectedDateIsToday}
+                        barData={timeRange === 'Day' && source === 'solar' && dailyData ? { title: "Ideal", color: "#00000015", data: dailyData?.map(x => ({ timestamp: new Date(selectedDate).setHours(x.Hour, 20), value: x[enableDailyData === 'ideal' ? "Ideal" : "Scaled 2"] })) ?? [] } : undefined }
                         suffix={source === 'battery' ? (timeRange === 'Day' ? "V" : "%") : (timeRange !== 'Day' ? "h" : undefined)} />
                 </div>
                 {timeRange === 'Day' && <div className={styles.dateSelectionContainer}>

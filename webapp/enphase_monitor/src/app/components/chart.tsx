@@ -110,7 +110,8 @@ type ChartProps = {
     hideTimeRange?: boolean, 
     hideAverages?: boolean, 
     suffix?: string,
-    type?: 'line' | 'bar'
+    type?: 'line' | 'bar',
+    barData?: ChartData['series'][number],
 }
 
 export default function Chart(props: ChartProps) {
@@ -120,13 +121,13 @@ export default function Chart(props: ChartProps) {
 
     const showAllData = useMemo(() => props.defaultTimeRange === 'All', [props.defaultTimeRange]);
 
-    const { filteredData, isSingleDay } = useMemo(() => {
+    const { filteredData, filteredBarData, isSingleDay } = useMemo(() => {
         let hours = 0;
 
         if (showAllData) {
             const isSingleDay = data.series[0]?.data?.length ? 
                 differenceInHours(data.series[0].data[data.series[0].data.length - 1].timestamp, data.series[0].data[0].timestamp) < 25 : false;
-            return { filteredData: data.series, isSingleDay };
+            return { filteredData: data.series, filteredBarData: props.barData?.data, isSingleDay };
         } else if (chartTimeRange !== 'Day') {
             hours = parseInt(chartTimeRange.replace("h", ""), 10) * 1000 * 60 * 60;;
         } else {
@@ -141,11 +142,13 @@ export default function Chart(props: ChartProps) {
             };
         });
 
+        const filteredBarData = props.barData ? props.barData.data.filter(d => d.timestamp > Date.now() - hours && d.timestamp <= Date.now()) : [];
+
         const isSingleDay = filtered[0]?.data?.length ? 
             differenceInHours(filtered[0].data[filtered[0].data.length - 1].timestamp, filtered[0].data[0].timestamp) < 25 : false;
 
-        return { filteredData: filtered, isSingleDay };
-    }, [chartTimeRange, data.series, clearedSeries, showAllData]);
+        return { filteredData: filtered, filteredBarData, isSingleDay };
+    }, [chartTimeRange, data.series, clearedSeries, props.barData, showAllData]);
     const chartRef = useRef<any>(null);
 
     // Calculate average for each dataset
@@ -179,10 +182,21 @@ export default function Chart(props: ChartProps) {
                     borderWidth: 1,
                     pointRadius: 0,
                     fill: false
-                }))
+                })),
+                ...(filteredBarData && props.barData ? [{
+                    label: props.barData.title,
+                    data: filteredBarData.map(d => ({ x: new Date(d.timestamp), y: d.value })),
+                    type: 'bar',
+                    backgroundColor: `${props.barData.color}33`,
+                    borderColor: props.barData.color,
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    barThickness: typeof window !== 'undefined' ? Math.min(800, (window.innerWidth - 200)) / filteredBarData.length : 10,
+                    fill: false
+                }] : [])
             ]
         };
-    }, [filteredData, averages, props.hideAverages]);
+    }, [filteredData, averages, props.hideAverages, props.barData]);
 
     useLayoutEffect(() => {
         if (chartRef.current && chartData.datasets[0]?.data.length > 0 && highlightMode) {
