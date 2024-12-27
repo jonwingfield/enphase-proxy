@@ -44,7 +44,7 @@ export function useProduction() {
 
     useEffect(() => {
         if (globalState.autoRefresh && globalState.source === "office") {
-            const timeout = setTimeout(() => updateOfficeProductionData(), 250);
+            const timeout = setTimeout(() => updateOfficeProductionData(), 1000);
             return () => clearTimeout(timeout);
         }
     }, [globalState.autoRefresh, officeProductionData, globalState.source]);

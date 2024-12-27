@@ -96,7 +96,7 @@ async function fetchTodayProductionData(date: Date = new Date()): Promise<ChartD
     };
 }
 
-async function fetchMaxDataForDay(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
+export async function fetchMaxDataForDay(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
     const begin = new Date(new Date(date.getTime()).setHours(1, 0, 0));
     const end = new Date(new Date(date.getTime()).setHours(23, 59, 59));
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
@@ -106,11 +106,11 @@ async function fetchMaxDataForDay(date: Date): Promise<{ timestamp: Date, produc
             WHERE time > '${begin.toISOString()}' and time < '${end.toISOString()}' and "productionWhToday" < 120000`
     }));
     const data = await response.json();
-    return data.results[0].series[0].values.map((point: [string, number, number, number]) => ({
+    return data.results[0].series?.[0]?.values.map((point: [string, number, number, number]) => ({
         timestamp: new Date(point[0]),
         productionWatts: point[1],
         consumptionWatts: point[2],
-    })).slice(-1);
+    })) ?? [];
 
 }
 
@@ -121,12 +121,12 @@ async function fetch7DayProductionData(): Promise<{ timestamp: Date, productionW
 async function fetchMultiDayProductionData(numDays: number): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
     const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
 
-    const lastSevenDays = [];
+    const promises = [];
     for (let i = numDays; i >= 0; i--) {
-        lastSevenDays.push(await fetchMaxDataForDay(new Date(midnightToday.getTime() - (i * 24 * 60 * 60 * 1000))));
+        promises.push(fetchMaxDataForDay(new Date(midnightToday.getTime() - (i * 24 * 60 * 60 * 1000))));
     }
 
-    return lastSevenDays.flat();
+    return (await Promise.all(promises)).flat();
 }
 
 async function fetchComparisonFullDayData(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number } | undefined> {

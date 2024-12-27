@@ -1,12 +1,11 @@
-import { fetchMultiDayProductionData, fetchTodayProductionData } from "@/service/enphaseProduction";
+import { fetchMultiDayProductionData, fetchTodayProductionData, fetchMaxDataForDay as fetchMaxHomeDataForDay, ChartData } from "@/service/enphaseProduction";
 import { useEffect, useMemo } from "react";
-import { ChartData } from "@/service/enphaseProduction";
 import { useState } from "react";
 import styles from './usageDetails.module.css';
 import { Battery2BarOutlined, CellTowerOutlined, HomeOutlined, WbSunnyOutlined } from "@mui/icons-material";
 import { formatWatt, HomeProductionData } from "./useProduction";
 import Chart from "./chart";
-import { fetchBatteryData, fetchBatteryDataForDay, fetchMultiDayBatteryData, fetchMultiDayOfficeProductionData, getLast12HoursOfficeProduction, OfficeProductionData } from "@/service/officeProduction";
+import { fetchBatteryData, fetchMaxDataForDay as fetchMaxOfficeDataForDay, fetchMultiDayBatteryData, fetchMultiDayOfficeProductionData, getLast12HoursOfficeProduction, OfficeProductionData } from "@/service/officeProduction";
 import { SubNavBar } from "./navBar";
 import { calculateCost, useGlobalState } from "./GlobalStateContext";
 import { differenceInDays, isToday, startOfMonth } from "date-fns";
@@ -26,9 +25,13 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
     const { globalState } = useGlobalState();
     const [rooftopChartData, setRooftopChartData] = useState<ChartData>({ series: [
         { title: "Production", color: ThemeColors.production, data: [] },
+        { title: "Consumption", color: ThemeColors.consumption, data: [] },
+        { title: "Grid", color: ThemeColors.grid, data: [] },
     ] });
     const [officeChartData, setOfficeChartData] = useState<ChartData>({ series: [
         { title: "Production", color: ThemeColors.production, data: [] },
+        { title: "Consumption", color: ThemeColors.consumption, data: [] },
+        { title: "Grid", color: ThemeColors.grid, data: [] },
     ] });
     const [batteryChartData, setBatteryChartData] = useState<ChartData>({ series: [
         { title: "Battery Voltage", color: ThemeColors.powerwall, data: [] },
@@ -38,6 +41,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const selectedDateIsToday = isToday(selectedDate);
     const [chartType, setChartType] = useState<'line' | 'bar'>('line');
+    const [maxUsageForDay, setMaxUsageForDay] = useState<number>(0);
 
     const fetchData = (type: 'home' | 'office' | 'battery') => {   
         if (type === 'home') {
@@ -83,9 +87,9 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
         }
 
         if (type === 'office') {
-                if (timeRange === 'Day') {
-                    getLast12HoursOfficeProduction().then(({series}) => {
-                        setOfficeChartData({
+            if (timeRange === 'Day') {
+                getLast12HoursOfficeProduction(selectedDate).then(({series}) => {
+                    setOfficeChartData({
                         series: [
                             { title: "Production", color: ThemeColors.production, data: series[0].data },
                             { title: "Consumption", color: ThemeColors.consumption, data: series[1].data },
@@ -176,15 +180,23 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
 
     const chartData = globalState.source === 'home' ? rooftopChartData : officeChartData;
 
+    useEffect(() => {
+        if (timeRange === 'Day' && globalState.source === 'home') {
+            fetchMaxHomeDataForDay(selectedDate).then(data => {
+                setMaxUsageForDay(data.reduce((acc, d) => acc + 
+                (source === 'solar' ? d.productionWatts : source === 'home' ? d.consumptionWatts : d.consumptionWatts - d.productionWatts), 0));
+            });
+        } else if (timeRange === 'Day' && globalState.source === 'office') {
+            fetchMaxOfficeDataForDay(selectedDate).then(data => {
+                setMaxUsageForDay(data.reduce((acc, d) => acc + 
+                    (source === 'solar' ? d.productionWatts : source === 'home' ? d.consumptionWatts : d.consumptionWatts - d.productionWatts), 0));
+            });
+        }
+    }, [timeRange, selectedDate, source]);
+
     const total = useMemo(() => {
         if (productionData && timeRange === 'Day') {
-            if (source === 'solar') {
-                return productionData.panel_wh ?? 0;
-            } else if (source === 'home') {
-                return productionData.load_wh ?? 0;
-            } else {
-                return (productionData.load_wh ?? 0) - (productionData.panel_wh ?? 0);
-            }
+            return maxUsageForDay;
         } else if (timeRange !== 'Day') {
             if (globalState.source === 'home') {
                 return rooftopChartData.series[seriesIndex].data.reduce((acc, d) => acc + d.value, 0);
@@ -193,7 +205,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
             }
         }
         return 0;
-    }, [productionData, timeRange, source, rooftopChartData, officeChartData]);
+    }, [productionData, timeRange, source, rooftopChartData, officeChartData, seriesIndex]);
 
     return (
             <section className={styles.summarySection}>
