@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useGlobalState } from "./GlobalStateContext";
 import styles from "./summary.module.css";
@@ -54,6 +53,19 @@ export default function Summary() {
     useEffect(() => {
         setGlobalState(globalState => ({ ...globalState, energyState, batt_percent, weather, teslaState }));
     }, [energyState, batt_percent, weather, teslaState, setGlobalState]);
+
+    useEffect(() => {
+        if (showHome) {
+            document.body.classList.add('modal-open');
+        } else {
+            document.body.classList.remove('modal-open');
+        }
+
+        // Cleanup when component unmounts
+        return () => {
+            document.body.classList.remove('modal-open');
+        };
+    }, [showHome]);
 
     return (
         <>
@@ -155,7 +167,7 @@ export default function Summary() {
                 }
                 {globalState.source === "office" && officeProductionData &&
                     <div className={`${styles.statusModule} ${styles.powerwall}`} onClick={() => setIndividualVoltage(i => !i)} role="button">
-                        <h5>{formatWatt(-officeProductionData.batt_watts)} &middot; {formatWatt(officeProductionData.batt_wh)}h</h5>
+                        <h5>{formatWatt(-officeProductionData.batt_watts)} &middot; {formatWatt(-officeProductionData.batt_wh)}h</h5>
                         <h5>{Math.round(officeProductionData.batt_percent)}% &middot; {(officeProductionData.batt_v / (individualVoltage ? 4 : 1)).toFixed(2)}V</h5>
                         <small className={styles.small}>Powerwall</small>
                     </div>

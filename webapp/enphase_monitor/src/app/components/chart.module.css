@@ -42,3 +42,11 @@
     color: var(--section-background);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+.chartSeries {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 10px 0;
+    gap: 10px;
+}

@@ -49,7 +49,6 @@ export default function RootLayout({
             <body className={`${geistSans.variable} ${geistMono.variable}`}>
                 <GlobalStateProvider>
                     <div className="page">
-
                         <main>
                             {children}
                         </main>

@@ -13,12 +13,13 @@ import {
   Filler,
   ChartOptions
 } from 'chart.js';
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import styles from "./chart.module.css";
 import 'chartjs-adapter-date-fns';
 import { ChartData } from "@/service/enphaseProduction";
 import { differenceInHours, format } from 'date-fns';
 import { formatWatt } from "./useProduction";
+import { ThemeColors } from "../theme";
 
 
 const verticalLinePlugin = {
@@ -117,7 +118,7 @@ type ChartProps = {
 export default function Chart(props: ChartProps) {
     const { data, highlightMode, suffix } = props;
     const [chartTimeRange, setChartTimeRange] = useState<ChartTimeRange>(props.defaultTimeRange || "6h");
-    const [clearedSeries, setClearedSeries] = useState<string[]>([]);
+    const [clearedSeries, setClearedSeries] = useState<string[]>(props.data.series.filter(s => s.hiddenByDefault).map(s => s.title));
 
     const showAllData = useMemo(() => props.defaultTimeRange === 'All', [props.defaultTimeRange]);
 
@@ -320,16 +321,21 @@ export default function Chart(props: ChartProps) {
                     <Line data={chartData as any} ref={chartRef} options={{...options, maintainAspectRatio: false} as any} />}
             </div>
             {data.series.length > 1 &&
-            <div style={{marginBottom: '1rem'}}>
+            <div className={styles.chartSeries}>
                 {data.series.map(s => (
-                    <label style={{marginRight: '1rem'}} key={s.title}>
-                        <input 
-                        type="checkbox" 
-                        checked={!clearedSeries.includes(s.title)}
-                        onChange={() => setClearedSeries(clearedSeries.includes(s.title) ? clearedSeries.filter(t => t !== s.title) : [...clearedSeries, s.title])}
-                        style={{marginRight: '0.5rem'}} />
-                        {s.title}
-                    </label>
+                    <Fragment key={s.title}>
+                        {s.icon && <s.icon style={{ marginRight: '0.5rem', color: clearedSeries.includes(s.title) ? ThemeColors.grayAlpha500 : s.color }} onClick={() => setClearedSeries(clearedSeries.includes(s.title) ? clearedSeries.filter(t => t !== s.title) : [...clearedSeries, s.title])} />}
+                        {!s.icon &&
+                            <label style={{ marginRight: '1rem' }} key={s.title}>
+                                <input
+                                    type="checkbox"
+                                    checked={!clearedSeries.includes(s.title)}
+                                    onChange={() => setClearedSeries(clearedSeries.includes(s.title) ? clearedSeries.filter(t => t !== s.title) : [...clearedSeries, s.title])}
+                                    style={{ marginRight: '0.5rem' }} />
+                                {s.title}
+                            </label>
+                        }
+                    </Fragment>
                 ))}
             </div>
             }

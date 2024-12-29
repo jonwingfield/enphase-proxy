@@ -3,165 +3,20 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import styles from "./production.module.css";
 import Chart from "./chart";
-import { useGlobalState } from "./GlobalStateContext";
-import { ChartData } from "@/service/enphaseProduction";
+import { ChartData, EnphaseProductionData, fetch7DayProductionData, fetchComparisonData, fetchComparisonFullDayData, fetchProductionData, fetchTodayProductionData } from "@/service/enphaseProduction";
 import DateSelection from "./dateSelection";
+import { HistoryOutlined, HomeOutlined, WbSunnyOutlined } from "@mui/icons-material";
+import { ThemeColors } from "../theme";
 
-interface ProductionData {
-    production: {
-        type: "inverters" | "eim";
-        activeCount: number;
-        readingTime: number;
-        wNow: number;
-        whLifetime: number;
-        whToday: number;
-        whLastSevenDays: number;
-        vahToday: number;
-        varhLeadToday: number;
-        varhLagToday: number;
-        rmsCurrent: number;
-        rmsVoltage: number;
-        reactPwr: number;
-        apprntPwr: number;
-        pwrFactor: number;
-    }[];
-    consumption: {
-        type: "eim";
-        measurementType: "total-consumption" | "net-consumption";
-        activeCount: number;
-        readingTime: number;
-        wNow: number;
-        whLifetime: number;
-        varhLeadLifetime: number;
-        varhLagLifetime: number;
-        vahLifetime: number;
-        rmsCurrent: number;
-        rmsVoltage: number;
-        reactPwr: number;
-        apprntPwr: number;
-        pwrFactor: number;
-        whToday: number;
-        whLastSevenDays: number;
-        vahToday: number;
-        varhLeadToday: number;
-        varhLagToday: number;
-    }[];
-    storage: {
-        type: "acb";
-        activeCount: number;
-        readingTime: number;
-        wNow: number;
-        whNow: number;
-        state: "idle" | "charging" | "discharging";
-    }[];
-}
-
-async function fetchProductionData(): Promise<ProductionData> {
-    const response = await fetch("/enphase_api/production.json");
-    return response.json();
-}
-
-async function fetchLast12HoursProductionData(): Promise<ChartData> {
-    const response = await fetch("/influxdb/query?" + new URLSearchParams({
-        db: "solar",
-        q: `SELECT mean("productionWatts") as productionWatts, mean("consumptionWatts") as consumptionWatts 
-            FROM "solar"."autogen"."rooftop" 
-            WHERE time > now() - 12h 
-            GROUP BY time(1m)`
-    }));
-    const data = await response.json();
-    return {
-        series: [{
-            title: "Production",
-            color: "#ffcc00",
-            data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
-                timestamp: new Date(point[0]).getTime(),
-                value: point[1],
-            })),
-        }, {
-            title: "Consumption",
-            color: "#FF0000",
-            data: data.results[0].series[0].values.map((point: [string, number, number]) => ({
-                timestamp: new Date(point[0]).getTime(),
-                value: point[2],
-            })),
-        }]
-    };
-}
-
-async function fetchMaxDataForDay(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
-    const begin = new Date(new Date(date.getTime()).setHours(23, 0, 0));
-    const end = new Date(new Date(date.getTime()).setHours(23, 59, 0));
-    const response = await fetch("/influxdb/query?" + new URLSearchParams({
-        db: "solar",
-        q: `SELECT max("productionWhToday") as productionWatts, max("consumptionWhToday") as consumptionWatts 
-            FROM "solar"."autogen"."rooftop" 
-            WHERE time > '${begin.toISOString()}' and time < '${end.toISOString()}'
-            GROUP BY time(1d)`
-    }));
-    const data = await response.json();
-    return data.results[0].series[0].values.map((point: [string, number, number, number]) => ({
-        timestamp: new Date(point[0]),
-        productionWatts: point[1],
-        consumptionWatts: point[2],
-    })).slice(-1);
-
-}
-
-async function fetch7DayProductionData(): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
-    const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
-
-    const lastSevenDays = [];
-    for (let i = 1; i < 8; i++) {
-        lastSevenDays.push(await fetchMaxDataForDay(new Date(midnightToday.getTime() - (i * 24 * 60 * 60 * 1000))));
-    }
-
-    return lastSevenDays.flat();
-}
-
-async function fetchComparisonFullDayData(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number } | undefined> {
-    const oneAmOnDate = new Date(new Date(new Date(date).setHours(1, 0, 0, 0)));
-    const currentTimeOnDate = new Date(new Date(oneAmOnDate).setHours(new Date().getHours(), new Date().getMinutes()));
-
-    const response = await fetch("/influxdb/query?" + new URLSearchParams({
-        db: "solar",
-        q: `SELECT max("productionWhToday") as productionWatts, max("consumptionWhToday") as consumptionWatts 
-            FROM "solar"."autogen"."rooftop" 
-            WHERE time > '${oneAmOnDate.toISOString()}' and time < '${currentTimeOnDate.toISOString()}'`
-    }));
-    const data = await response.json();
-    return data.results[0].series?.[0]?.values.map((point: [string, number, number]) => ({
-        timestamp: new Date(point[0]),
-        productionWatts: point[1],
-        consumptionWatts: point[2],
-    }))[0] ?? undefined;
-} 
-
-async function fetchComparisonData(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
-    const startDate = new Date(new Date(date.getTime()).setHours(0, 0, 0, 0));
-    const endDate = new Date(new Date(date.getTime()).setHours(23, 59, 59, 999));
-
-    const response = await fetch("/influxdb/query?" + new URLSearchParams({
-        db: "solar",
-        q: `SELECT mean("productionWatts") as productionWatts, mean("consumptionWatts") as consumptionWatts 
-            FROM "solar"."autogen"."rooftop" WHERE time > '${startDate.toISOString()}' and time < '${endDate.toISOString()}'
-            GROUP BY time(1m)`
-    }));
-    const data = await response.json();
-    return data.results[0].series?.[0]?.values.map((point: [string, number, number]) => ({
-        timestamp: new Date(point[0]),
-        productionWatts: point[1],
-        consumptionWatts: point[2],
-    })) ?? [];
-}
-
-export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ratePerKWHOver1000, visible }: { autoRefresh?: boolean, ratePerKWHUnder1000: number, ratePerKWHOver1000: number, visible: boolean  }) {
-    const [productionData, setProductionData] = useState<ProductionData | null>(null);
-    const [chartData, setChartData] = useState<ChartData>({ series: [
-        { title: "Production", color: "#00FF00", data: [] },
-        { title: "Consumption", color: "#FF0000", data: [] },
-        { title: "Comparison", color: "#0000FF", data: [] }
-    ] });
+export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ratePerKWHOver1000, visible }: { autoRefresh?: boolean, ratePerKWHUnder1000: number, ratePerKWHOver1000: number, visible: boolean }) {
+    const [productionData, setProductionData] = useState<EnphaseProductionData | null>(null);
+    const [chartData, setChartData] = useState<ChartData>({
+        series: [
+            { title: "Production", color: ThemeColors.solar, data: [] },
+            { title: "Consumption", color: ThemeColors.consumption, data: [] },
+            { title: "Comparison", color: ThemeColors.solarComparison, data: [] }
+        ]
+    });
     const [sevenDayData, setSevenDayData] = useState<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]>([]);
     const [comparisonFullDayData, setComparisonFullDayData] = useState<{ timestamp: Date, productionWatts: number, consumptionWatts: number } | undefined>(undefined);
     const autoRefreshRef = useRef<boolean>(autoRefresh);
@@ -169,7 +24,7 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
     const [comparisonData, setComparisonData] = useState<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]>([]);
 
     const updateHistoricalData = useCallback((comparisonDate: Date) => {
-        fetchLast12HoursProductionData().then(data => {
+        fetchTodayProductionData().then(data => {
             setChartData(data);
         });
         fetch7DayProductionData().then(data => {
@@ -180,10 +35,10 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
         });
     }, []);
 
-    useEffect(() => { 
-        if (autoRefresh) { 
-            updateHistoricalData(comparisonDate); 
-        } 
+    useEffect(() => {
+        if (autoRefresh) {
+            updateHistoricalData(comparisonDate);
+        }
     }, [autoRefresh, comparisonDate]);
 
     const sevenDayAverageData = useMemo(() => {
@@ -215,8 +70,8 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
             const consumptionData = data.consumption.filter(p => p.measurementType === "total-consumption")[0];
             setChartData(chartData => ({
                 series: [
-                    { ...chartData.series[0], data: [...chartData.series[0].data, { timestamp: productionData.readingTime*1000, value: productionData.wNow }] },
-                    { ...chartData.series[1], data: [...chartData.series[1].data, { timestamp: consumptionData.readingTime*1000, value: consumptionData.wNow }] }
+                    { ...chartData.series[0], data: [...chartData.series[0].data, { timestamp: productionData.readingTime * 1000, value: productionData.wNow }] },
+                    { ...chartData.series[1], data: [...chartData.series[1].data, { timestamp: consumptionData.readingTime * 1000, value: consumptionData.wNow }] }
                 ]
             }));
         });
@@ -232,17 +87,18 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
         const daysSinceComparisonDate = Math.floor((new Date().getTime() - comparisonDate.getTime()) / (24 * 60 * 60 * 1000));
         return {
             series: [
-                chartData.series[0], 
-                chartData.series[1], 
-                { 
+                { ...chartData.series[0], icon: WbSunnyOutlined },
+                { ...chartData.series[1], icon: HomeOutlined, hiddenByDefault: true },
+                {
                     title: comparisonDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }),
-                    color: "#0000FF",
+                    color: ThemeColors.solarComparison,
+                    icon: HistoryOutlined,
                     data: comparisonData.map(x => ({ timestamp: x.timestamp.getTime() + (daysSinceComparisonDate * 24 * 60 * 60 * 1000), value: x.productionWatts }))
                 }]
         };
     }, [chartData, comparisonData]);
 
-    return <div className={visible ? "" : styles.hidden}>
+    return <div className={`${visible ? "" : styles.hidden} ${styles.productionContainer}`}>
         <DateSelection date={comparisonDate} setDate={setComparisonDate} excludeToday />
 
         <table className={styles.table}>
@@ -257,55 +113,61 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
                 </tr>
             </thead>
             <tbody>
-                <tr>
+                <tr className={styles.row}>
                     <td className={styles.item}>Now</td>
-                    <td className={styles.item}> 
-                        {Math.round(productionData?.production?.find(p => p.type === "eim")?.wNow ?? 0)}
+                    <td className={styles.item}>
+                        {Math.round(productionData?.production?.find(p => p.type === "eim")?.wNow ?? 0).toLocaleString()}
                     </td>
                     <td className={styles.item}>
-                        {Math.round(productionData?.consumption?.find(p => p.measurementType === "total-consumption")?.wNow ?? 0)}
+                        {Math.round(productionData?.consumption?.find(p => p.measurementType === "total-consumption")?.wNow ?? 0).toLocaleString()}
                     </td>
                     <td className={styles.item}>
-                        {Math.round(productionData?.consumption?.find(p => p.measurementType === "net-consumption")?.wNow ?? 0)}
+                        {Math.round(productionData?.consumption?.find(p => p.measurementType === "net-consumption")?.wNow ?? 0).toLocaleString()}
                     </td>
+                    <td className={styles.item}></td>
+                    <td className={styles.item}></td>
                 </tr>
-                <tr>
+                <tr className={styles.row}>
                     <td className={styles.item}>Today</td>
                     <td className={styles.item}>
-                        {Math.round(productionData?.production?.find(p => p.type === "eim")?.whToday ?? 0)}
+                        {Math.round(productionData?.production?.find(p => p.type === "eim")?.whToday ?? 0).toLocaleString()}
                     </td>
                     <td className={styles.item}>
-                        {Math.round(productionData?.consumption?.find(p => p.measurementType === "total-consumption")?.whToday ?? 0)}
+                        {Math.round(productionData?.consumption?.find(p => p.measurementType === "total-consumption")?.whToday ?? 0).toLocaleString()}
                     </td>
                     <td className={styles.item}>
-                        { productionData ?
-                            (Math.round(productionData.consumption.find(p => p.measurementType === "total-consumption")!.whToday -  productionData.production.find(p => p.type === "eim")!.whToday) ?? 0) : 0}
+                        {productionData ?
+                            (Math.round(productionData.consumption.find(p => p.measurementType === "total-consumption")!.whToday - productionData.production.find(p => p.type === "eim")!.whToday) ?? 0).toLocaleString() : 0}
                     </td>
                     <td className={styles.item}>
-                        { productionData ?
-                            ((Math.round(productionData.consumption.find(p => p.measurementType === "total-consumption")!.whToday -  productionData.production.find(p => p.type === "eim")!.whToday) ?? 0) / 1000 * (ratePerKWHUnder1000 / 100)).toLocaleString('en-US', { style: 'currency', currency: 'USD' })  : 0}
+                        {productionData ?
+                            ((Math.round(productionData.consumption.find(p => p.measurementType === "total-consumption")!.whToday - productionData.production.find(p => p.type === "eim")!.whToday) ?? 0) / 1000 * (ratePerKWHUnder1000 / 100)).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : 0}
                     </td>
                     <td className={styles.item}>
                         {((Math.round(productionData?.production?.find(p => p.type === "eim")?.whToday ?? 0) / 1000 * (ratePerKWHOver1000 / 100))).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
                     </td>
                 </tr>
-                {comparisonFullDayData && 
-                    <tr>
+                {comparisonFullDayData &&
+                    <tr className={styles.row}>
                         <td className={styles.item}>{comparisonDate.toLocaleDateString('en-US', { weekday: 'long' })}</td>
-                        <td className={styles.item}>{Math.round(comparisonFullDayData.productionWatts)}</td>
-                        <td className={styles.item}>{Math.round(comparisonFullDayData.consumptionWatts)}</td>
-                        <td className={styles.item}>{Math.round(comparisonFullDayData.consumptionWatts - comparisonFullDayData.productionWatts)}</td>
+                        <td className={styles.item}>{Math.round(comparisonFullDayData.productionWatts).toLocaleString()}</td>
+                        <td className={styles.item}>{Math.round(comparisonFullDayData.consumptionWatts).toLocaleString()}</td>
+                        <td className={styles.item}>{Math.round(comparisonFullDayData.consumptionWatts - comparisonFullDayData.productionWatts).toLocaleString()}</td>
+                        <td className={styles.item}></td>
+                        <td className={styles.item}></td>
                     </tr>
                 }
                 {sevenDayAverageData &&
-                    <tr>
+                    <tr className={styles.row}>
                         <td className={styles.item}>7 Day Average</td>
-                        <td className={styles.item}>{Math.round(sevenDayAverageData.production)}</td>
-                        <td className={styles.item}>{Math.round(sevenDayAverageData.consumption)}</td>
-                        <td className={styles.item}>{Math.round(sevenDayAverageData.consumption - sevenDayAverageData.production)}</td>
+                        <td className={styles.item}>{Math.round(sevenDayAverageData.production).toLocaleString()}</td>
+                        <td className={styles.item}>{Math.round(sevenDayAverageData.consumption).toLocaleString()}</td>
+                        <td className={styles.item}>{Math.round(sevenDayAverageData.consumption - sevenDayAverageData.production).toLocaleString()}</td>
+                        <td className={styles.item}></td>
+                        <td className={styles.item}></td>
                     </tr>
                 }
-                <tr>
+                <tr className={styles.row}>
                     <td className={styles.item}>Lifetime</td>
                     <td className={styles.item}>
                         {Math.round(productionData?.production?.find(p => p.type === "eim")?.whLifetime ?? 0) / 1000}
@@ -321,12 +183,12 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
                     </td>
                     <td className={styles.item}>
                         {productionData ?
-                            ((Math.round(productionData.production.find(p => p.type === "eim")!.whLifetime / 1000 * (ratePerKWHOver1000 / 100))).toLocaleString('en-US', { style: 'currency', currency: 'USD' }))  : 0}
+                            ((Math.round(productionData.production.find(p => p.type === "eim")!.whLifetime / 1000 * (ratePerKWHOver1000 / 100))).toLocaleString('en-US', { style: 'currency', currency: 'USD' })) : 0}
                     </td>
                 </tr>
             </tbody>
         </table>
 
-        <Chart data={chartDataWithComparison} defaultTimeRange="1h" highlightMode="last" hideAverages />
+        <Chart data={chartDataWithComparison} defaultTimeRange="2h" highlightMode="last" hideAverages />
     </div>;
 }

@@ -1,4 +1,6 @@
 import { ThemeColors } from "@/app/theme";
+import { OverridableComponent } from "@mui/material/OverridableComponent";
+import { SvgIconTypeMap } from "@mui/material/SvgIcon";
 
 export interface EnphaseProductionData {
     production: {
@@ -58,6 +60,8 @@ export interface ChartData {
     series: {
         title: string;
         color: string;
+        icon?: OverridableComponent<SvgIconTypeMap<object, "svg">>;
+        hiddenByDefault?: boolean;
         data: {
             timestamp: number;
             value: number;

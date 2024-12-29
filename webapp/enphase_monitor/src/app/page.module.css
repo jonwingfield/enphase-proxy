@@ -160,6 +160,7 @@ a.secondary {
 .header {
   display: flex;
   justify-content: space-between;
+  margin-top: 20px;
 }
 
 .headerRight {

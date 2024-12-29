@@ -13,6 +13,7 @@
   --solar: #ffcc00;
   --home: #af1966;
   --powerwall: #00d0a6;
+  --solar-comparison: #af8c00;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -36,6 +37,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-transform:translate3d(0,0,0);
+
+  &.modal-open {
+    overflow: hidden;
+    height: 100vh;
+  }
 }
 
 * {
@@ -138,8 +144,10 @@ main {
     --button-primary-hover: #383838;
     --button-secondary-hover: #f2f2f2;
   
-    display: grid;
-    grid-template-rows: 20px 1fr 20px;
+    /* display: grid;
+    grid-template-rows: 20px 1fr 20px; */
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-items: center;
     min-height: 100vh;

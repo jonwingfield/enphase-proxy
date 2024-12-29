@@ -5,4 +5,6 @@ export const ThemeColors = {
     solar: "#ffcc00",
     home: "#af1966",
     powerwall: "#00d0a6",
+    grayAlpha500: "#00000099",
+    solarComparison: "#af8c00"
 }
