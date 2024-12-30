@@ -163,8 +163,8 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
                         <td className={styles.item}>{Math.round(sevenDayAverageData.production).toLocaleString()}</td>
                         <td className={styles.item}>{Math.round(sevenDayAverageData.consumption).toLocaleString()}</td>
                         <td className={styles.item}>{Math.round(sevenDayAverageData.consumption - sevenDayAverageData.production).toLocaleString()}</td>
-                        <td className={styles.item}></td>
-                        <td className={styles.item}></td>
+                        <td className={styles.item}>{((sevenDayAverageData.consumption - sevenDayAverageData.production) / 1000 * (ratePerKWHUnder1000 / 100)).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</td>
+                        <td className={styles.item}>{(sevenDayAverageData.production / 1000 * (ratePerKWHOver1000 / 100)).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</td>
                     </tr>
                 }
                 <tr className={styles.row}>

@@ -70,3 +70,7 @@
     border: gray 1px solid;
     padding: 2px 8px;
 }
+
+.partial {
+    color: var(--gray-alpha-200);
+}
