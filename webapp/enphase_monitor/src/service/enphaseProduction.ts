@@ -70,7 +70,7 @@ export interface ChartData {
 }
 
 
-async function fetchTodayProductionData(date: Date = new Date()): Promise<ChartData> {
+async function fetchTodayProductionData(date: Date = new Date(), fill: "previous" | "null" = "null"): Promise<ChartData> {
     const midnightToday = new Date(new Date(date).setHours(0, 0, 0, 0));
     const midnightTomorrow = new Date(new Date(date).setHours(23, 59, 59, 999));
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
@@ -78,7 +78,7 @@ async function fetchTodayProductionData(date: Date = new Date()): Promise<ChartD
         q: `SELECT mean("productionWatts") as productionWatts, mean("consumptionWatts") as consumptionWatts 
             FROM "solar"."autogen"."rooftop" 
             WHERE time > '${midnightToday.toISOString()}' and time < '${midnightTomorrow.toISOString()}'
-            GROUP BY time(1m)`
+            GROUP BY time(1m) fill(${fill})`
     }));
     const data = await response.json();
     return {
@@ -119,14 +119,18 @@ export async function fetchMaxDataForDay(date: Date): Promise<{ timestamp: Date,
 }
 
 async function fetch7DayProductionData(): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
-    return await fetchMultiDayProductionData(7);
+    return await fetchMultiDayProductionData(7, 7);
 }
 
-async function fetchMultiDayProductionData(numDays: number): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
+async function fetchMultiDayProductionData(daysAgo: number, numDays: number): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
+    if (numDays > daysAgo) {
+        numDays = daysAgo;
+    }
+
     const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
 
     const promises = [];
-    for (let i = numDays; i >= 0; i--) {
+    for (let i = daysAgo; i >= daysAgo - numDays; i--) {
         promises.push(fetchMaxDataForDay(new Date(midnightToday.getTime() - (i * 24 * 60 * 60 * 1000))));
     }
 

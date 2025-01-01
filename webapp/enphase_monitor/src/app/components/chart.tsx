@@ -146,7 +146,7 @@ export default function Chart(props: ChartProps) {
         const filteredBarData = props.barData ? props.barData.data.filter(d => d.timestamp > Date.now() - hours && d.timestamp <= Date.now()) : [];
 
         const isSingleDay = filtered[0]?.data?.length ? 
-            differenceInHours(filtered[0].data[filtered[0].data.length - 1].timestamp, filtered[0].data[0].timestamp) < 25 : false;
+            Math.abs(differenceInHours(filtered[0].data[filtered[0].data.length - 1].timestamp, filtered[0].data[0].timestamp)) < 25 : false;
 
         return { filteredData: filtered, filteredBarData, isSingleDay };
     }, [chartTimeRange, data.series, clearedSeries, props.barData, showAllData]);

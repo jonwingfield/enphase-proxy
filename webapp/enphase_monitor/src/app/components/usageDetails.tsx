@@ -7,8 +7,8 @@ import { formatWatt, HomeProductionData } from "./useProduction";
 import Chart from "./chart";
 import { fetchBatteryData, fetchMaxDataForDay as fetchMaxOfficeDataForDay, fetchMultiDayBatteryData, fetchMultiDayOfficeProductionData, getLast12HoursOfficeProduction, OfficeProductionData } from "@/service/officeProduction";
 import { SubNavBar } from "./navBar";
-import { calculateCost, useGlobalState } from "./GlobalStateContext";
-import { differenceInDays, isToday, startOfMonth } from "date-fns";
+import { calculateCost, getBillingCycleStartDate, useGlobalState } from "./GlobalStateContext";
+import { differenceInDays, endOfMonth, isToday, startOfMonth } from "date-fns";
 import { ThemeColors } from "../theme";
 import DateSelection from "./dateSelection";
 import { useAsyncState } from "./helpers";
@@ -53,7 +53,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
     const fetchData = (type: 'home' | 'office' | 'battery') => {   
         if (type === 'home') {
             if (timeRange === 'Day') {
-                fetchTodayProductionData(selectedDate).then(({series}) => {
+                fetchTodayProductionData(selectedDate, 'previous').then(({series}) => {
                     setRooftopChartData({
                         series: [
                             { title: "Production", color: ThemeColors.production, data: series[0].data },
@@ -65,9 +65,9 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                     setChartType('line');
                 });
             } else if (timeRange === 'Billing Cycle') {
-                const billingStartDate = new Date(globalState.billingCycleStartDate + 'T08:00:00Z');
+                const billingStartDate = getBillingCycleStartDate(globalState, selectedDate.getMonth(), selectedDate.getFullYear());
                 const daysAgo = differenceInDays(new Date(), billingStartDate);
-                fetchMultiDayProductionData(daysAgo).then(data => {
+                fetchMultiDayProductionData(daysAgo, 30).then(data => {
                     setRooftopChartData({
                         series: [
                             { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
@@ -78,9 +78,9 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                     setChartType('bar');
                 });
             } else if (timeRange === 'Month') {
-                const firstDayOfMonth = startOfMonth(new Date());
+                const firstDayOfMonth = startOfMonth(selectedDate);
                 const daysAgo = differenceInDays(new Date(), firstDayOfMonth);
-                fetchMultiDayProductionData(daysAgo).then(data => {
+                fetchMultiDayProductionData(daysAgo, differenceInDays(endOfMonth(selectedDate), firstDayOfMonth)).then(data => {
                     setRooftopChartData({
                         series: [
                             { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
@@ -216,7 +216,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
 
     return (
             <section className={styles.summarySection}>
-                <SubNavBar items={timeRanges} selectedItem={timeRange} onItemClicked={setTimeRange} />
+                <SubNavBar items={timeRanges} selectedItem={timeRange} onItemClicked={t => { setTimeRange(t); setSelectedDate(new Date()); }} />
                 <div className={styles.sourceToggle}>
                     <div className={styles.sourceInfo}>
                             <div onClick={() => setEnableDailyData(prev => prev === 'none' ? 'ideal' : prev === 'ideal' ? 'shaded' : 'none')}>
@@ -256,6 +256,12 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                 </div>
                 {timeRange === 'Day' && <div className={styles.dateSelectionContainer}>
                     <DateSelection date={selectedDate} setDate={setSelectedDate} />
+                </div>}
+                {timeRange === 'Billing Cycle' && <div className={styles.dateSelectionContainer}>
+                    <DateSelection date={selectedDate} setDate={setSelectedDate} jumpPeriod="30d" />
+                </div>}
+                {timeRange === 'Month' && <div className={styles.dateSelectionContainer}>
+                    <DateSelection date={startOfMonth(selectedDate)} setDate={setSelectedDate} jumpPeriod="1m" />
                 </div>}
             </section>
     );

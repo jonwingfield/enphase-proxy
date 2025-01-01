@@ -1,7 +1,8 @@
 "use client";
 
 import { WeatherData } from "@/service/weather";
-import { createContext, Dispatch, SetStateAction, useContext, useState } from "react";
+import { addDays, addMonths, parse } from "date-fns";
+import { createContext, Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
 
 export interface GlobalState {
     ratePerKWHUnder1000: number;
@@ -13,6 +14,7 @@ export interface GlobalState {
     batt_percent: number;
     teslaState: 'pluggedIn' | 'charging' | 'unplugged' | 'notHome';
     billingCycleStartDate: string;
+    billingCycleDays: number;
 }
 
 const DefaultGlobalState: GlobalState = {
@@ -25,6 +27,7 @@ const DefaultGlobalState: GlobalState = {
     batt_percent: 0,
     teslaState: 'unplugged',
     billingCycleStartDate: "2024-11-28",
+    billingCycleDays: 30,
 };
 
 export const GlobalStateContext = createContext<{
@@ -35,12 +38,22 @@ export const GlobalStateContext = createContext<{
     setGlobalState: () => {},
 });
 
+console.log(GlobalStateContext);
+
 export function useGlobalState() {
     return useContext(GlobalStateContext);
 }
 
 export function GlobalStateProvider({ children }: { children: React.ReactNode }) {
-    const [globalState, setGlobalState] = useState<GlobalState>(DefaultGlobalState);
+    const [globalState, setGlobalState] = useState<GlobalState>(
+        //typeof localStorage !== "undefined" && localStorage.getItem("globalState") ? JSON.parse(localStorage.getItem("globalState")!) : 
+        DefaultGlobalState
+    );
+
+    // TODO: server side save
+    useEffect(() => {
+        // localStorage.setItem("globalState", JSON.stringify(globalState));
+    }, [globalState]);
 
     return <GlobalStateContext.Provider value={{ globalState, setGlobalState }}>{children}</GlobalStateContext.Provider>;
 }
@@ -55,4 +68,19 @@ export function calculateCost(globalState: GlobalState, totalInWh: number) {
         return (((globalState.ratePerKWHOver1000 / 100) * (totalInKWh - 1000)) + 
             ((globalState.ratePerKWHUnder1000 / 100) * 1000)).toFixed(2);
     }
+}
+
+export function getBillingCycleStartDate(globalState: GlobalState, month: number, year: number) {
+    const configDate = parse(globalState.billingCycleStartDate, 'yyyy-MM-dd', new Date());
+    const billingCycleStartDate = new Date(year, month, configDate.getDate());
+    if (billingCycleStartDate.getTime() < new Date().setHours(0, 0, 0, 0)) {
+        return billingCycleStartDate;
+    } else {
+        return addMonths(billingCycleStartDate, -1);
+    }
+}
+
+export function getBillingCycleEndDate(startDate: Date) {
+    const billingCycleEndDate = addDays(startDate, 30);
+    return billingCycleEndDate;
 }

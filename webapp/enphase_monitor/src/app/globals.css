@@ -202,7 +202,8 @@ div.picture {
     }
 
     @media (prefers-color-scheme: dark) {
-        background-image: url('/powerflow-dark.png');
+        /* !important for now so we don't get the nocar/unplugged images */
+        background-image: url('/powerflow-dark.png') !important;
     }
 
     @media (max-width: 600px) {

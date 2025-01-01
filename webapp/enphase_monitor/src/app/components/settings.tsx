@@ -23,5 +23,9 @@ export default function Settings({ }: SettingsProps) {
             <label>Billing Cycle Start Date: </label>
             <input type="date" value={globalState.billingCycleStartDate} onChange={(e) => setGlobalState({ ...globalState, billingCycleStartDate: e.target.value })} />
         </div>
+        <div className={styles.setting}>    
+            <label>Billing Cycle Days: </label>
+            <input type="number" value={globalState.billingCycleDays} onChange={(e) => setGlobalState({ ...globalState, billingCycleDays: parseInt(e.target.value) })} />
+        </div>
     </div>;
 }
