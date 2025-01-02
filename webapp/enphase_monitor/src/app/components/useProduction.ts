@@ -68,12 +68,12 @@ export function useProduction() {
      };
 }
 
-export function formatWatt(watt: number) {
+export function formatWatt(watt: number, precision: number = 1) {
     if (watt === undefined) {
         return "--";
     }
-    if (watt > 1000 || watt < -1000) {
-        return `${(watt / 1000).toFixed(1)} kW`;
+    if (watt >= 1000 || watt <= -1000) {
+        return `${(watt / 1000).toFixed(precision)} kW`;
     }
     return `${watt.toFixed(0)} W`;
 }

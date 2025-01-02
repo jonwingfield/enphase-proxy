@@ -1,4 +1,7 @@
+'use client';
 import { Line, Bar } from "react-chartjs-2";
+import DataLabelsPlugin from 'chartjs-plugin-datalabels';
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,7 +14,6 @@ import {
   Tooltip,
   Legend,
   Filler,
-  ChartOptions
 } from 'chart.js';
 import { Fragment, useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import styles from "./chart.module.css";
@@ -57,7 +59,8 @@ ChartJS.register(
   Tooltip,
   Legend,
   Filler,
-  verticalLinePlugin
+  verticalLinePlugin,
+  DataLabelsPlugin,
 );
 
 (Tooltip.positioners as any)['custom'] = function(items: any) {
@@ -172,7 +175,18 @@ export default function Chart(props: ChartProps) {
                     borderWidth: 1,
                     tension: 0.1,
                     cubicInterpolationMode: 'monotone',
-                    pointRadius: 0 // Remove points
+                    pointRadius: 0,
+                    type: props.type === 'bar' ? 'bar' : 'line',
+                    datalabels: props.type === 'bar' ? {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: (value: any) => (value.y/1000).toFixed(1),
+                        color: d.color,
+                        offset: 0,
+                        font: {
+                            size: 11
+                        }
+                    } : undefined
                 })),
                 ...props.hideAverages ? [] : filteredData.map((d, i) => ({
                     label: `${d.title} Average`,
@@ -192,8 +206,23 @@ export default function Chart(props: ChartProps) {
                     borderColor: props.barData.color,
                     borderWidth: 1,
                     pointRadius: 0,
-                    barThickness: typeof window !== 'undefined' ? Math.min(800, (window.innerWidth - 200)) / filteredBarData.length : 10,
-                    fill: false
+                    barThickness: Math.min(800, (window.innerWidth - 200)) / filteredBarData.length,
+                    fill: false,
+                    datalabels: {  // Add this configuration
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: (value: any) => {
+                            if (value.y > 2) {
+                                return (value.y/1000).toFixed(1);
+                            }
+                            return '';
+                        },
+                        color: props.barData.color,
+                        offset: 0,
+                        font: {
+                            size: 11
+                        }
+                    }
                 }] : [])
             ]
         };
@@ -209,9 +238,9 @@ export default function Chart(props: ChartProps) {
         }
     }, [chartRef.current, data.series[0]?.data, highlightMode]);
 
-    const formatValue = useCallback((value: number) => {
-        return suffix === 'h' ? formatWatt(value) + 'h' : 
-            (suffix ? (value.toFixed(2) + " "  + suffix) : formatWatt(value));
+    const formatValue = useCallback((value: number, precision: number = 0) => {
+        return suffix === 'h' ? formatWatt(value, precision) + 'h' : 
+            (suffix ? (value.toFixed(2) + " "  + suffix) : formatWatt(value, precision));
     }, [suffix]);
 
     const options = {
@@ -244,9 +273,9 @@ export default function Chart(props: ChartProps) {
                         const value = context.raw.y;
                         if (value) {
                             if (label.includes('Average')) {
-                                return `Average: ${formatValue(value)}`;
+                                return `Average: ${formatValue(value, 2)}`;
                             } else {
-                                return formatValue(value);
+                                return formatValue(value, 2);
                             }
                         }
                     }
@@ -260,6 +289,14 @@ export default function Chart(props: ChartProps) {
                     color: '#808080',
                     width: 1,
                     dashPattern: [5, 5]
+                }
+            },
+            datalabels: {
+                display: (context: any) => {
+                    return context.dataset.type === 'bar' && 
+                        (window.innerWidth > 800 ||
+                            (filteredData[0]?.data.length < 15 || 
+                                (props.barData !== undefined && props.barData.data.filter(d => d.value > 2).length < 15)))
                 }
             },
         },

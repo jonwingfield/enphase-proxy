@@ -38,7 +38,7 @@ export const GlobalStateContext = createContext<{
     setGlobalState: () => {},
 });
 
-console.log(GlobalStateContext);
+// console.log(GlobalStateContext);
 
 export function useGlobalState() {
     return useContext(GlobalStateContext);
