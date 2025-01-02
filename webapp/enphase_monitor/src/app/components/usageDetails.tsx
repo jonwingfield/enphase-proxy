@@ -44,7 +44,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
     const selectedDateIsToday = isToday(selectedDate);
     const [chartType, setChartType] = useState<'line' | 'bar'>('line');
     const [maxUsageForDay, setMaxUsageForDay] = useState<number>(0);
-    const [enableDailyData, setEnableDailyData] = useState<'none' | 'ideal' | 'shaded'>('none');
+    const [enableDailyData, setEnableDailyData] = useState<'none' | 'ideal' | 'shaded' | 'sam'>('none');
 
     const [dailyData] = useAsyncState(() => 
         enableDailyData !== 'none' ? getDailyData(selectedDate) : Promise.resolve(undefined), 
@@ -219,7 +219,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                 <SubNavBar items={timeRanges} selectedItem={timeRange} onItemClicked={t => { setTimeRange(t); setSelectedDate(new Date()); }} />
                 <div className={styles.sourceToggle}>
                     <div className={styles.sourceInfo}>
-                            <div onClick={() => setEnableDailyData(prev => prev === 'none' ? 'ideal' : prev === 'ideal' ? 'shaded' : 'none')}>
+                            <div onClick={() => setEnableDailyData(prev => prev === 'none' ? 'ideal' : prev === 'ideal' ? 'shaded' : prev === 'shaded' ? 'sam' : 'none')}>
                                 {source === 'solar' && "Total PV Generation"}
                                 {source === 'home' && globalState.source === 'home' && "Home Usage"}
                                 {source === 'home' && globalState.source === 'office' && "Office Usage"}
@@ -237,6 +237,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                             <div>
                                 {enableDailyData === 'ideal' && <h4>Ideal: {formatWatt(dailyData[0]["Ideal Daily Output (W)"])}h</h4>}
                                 {enableDailyData === 'shaded'  && <h4>Shaded: {formatWatt(dailyData[0]["Shaded Daily Output (W)"])}h</h4>}
+                                {enableDailyData === 'sam'  && <h4>SAM: {formatWatt(dailyData[0]["SAM Daily Output (W)"])}h</h4>}
                             </div>}
                         </div>
                     <WbSunnyOutlined onClick={() => setSource('solar')} className={styles.sourceIcon} style={{ color: source === 'solar' ? ThemeColors.production : undefined }} />
@@ -251,7 +252,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                         type={chartType}
                         hideAverages={chartType === 'line'} 
                         hideTimeRange={chartType === 'bar' || !selectedDateIsToday}
-                        barData={timeRange === 'Day' && source === 'solar' && dailyData ? { title: "Ideal", color: "#00000015", data: dailyData?.map(x => ({ timestamp: new Date(selectedDate).setHours(x.Hour, 20), value: x[enableDailyData === 'ideal' ? "Ideal" : "Scaled 2"] })) ?? [] } : undefined }
+                        barData={timeRange === 'Day' && source === 'solar' && dailyData ? { title: "Ideal", color: "#00000015", data: dailyData?.map(x => ({ timestamp: new Date(selectedDate).setHours(x.Hour, 20), value: x[enableDailyData === 'ideal' ? "Ideal" : (enableDailyData === 'shaded' ? "Scaled 2" : "SAM Model Output (W)")] })) ?? [] } : undefined }
                         suffix={source === 'battery' ? (timeRange === 'Day' ? "V" : "%") : (timeRange !== 'Day' ? "h" : undefined)} />
                 </div>
                 {timeRange === 'Day' && <div className={styles.dateSelectionContainer}>

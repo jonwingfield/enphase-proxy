@@ -21,7 +21,7 @@ export async function getPvWattsDataClient(date: Date): Promise<any> {
     return data.json();
 }
 
-const headers = ['Month', 'Day', 'Hour', 'Beam Irradiance (W/m^2)', 'Diffuse Irradiance (W/m^2)', 'Total Irr', 'Ambient Temperature (C)', 'Wind Speed (m/s)', 'Plane of Array Irradiance (W/m^2)', 'Cell Temperature (C)', 'DC Array Output (W)', 'AC System Output (W)', 'Including Shade', 'Scaled For System', 'Better Shade Calc', 'Scaled 2', 'Diff', 'Ideal', 'Shaded Daily Output (W)', 'Ideal Daily Output (W)', 'Percentage'] as const;
+const headers = ['Month', 'Day', 'Hour', 'Beam Irradiance (W/m^2)', 'Diffuse Irradiance (W/m^2)', 'Total Irr', 'Ambient Temperature (C)', 'Wind Speed (m/s)', 'Plane of Array Irradiance (W/m^2)', 'Cell Temperature (C)', 'DC Array Output (W)', 'AC System Output (W)', 'Including Shade', 'Scaled For System', 'Better Shade Calc', 'Scaled 2', 'Diff', 'Ideal', 'Shaded Daily Output (W)', 'Ideal Daily Output (W)', 'Percentage', 'SAM Model Output (kW)', 'SAM Model Output (W)', 'SAM Daily Output (W)'] as const;
 export type Header = typeof headers[number];
 
 export async function getDailyData(date: Date) {
@@ -29,7 +29,7 @@ export async function getDailyData(date: Date) {
     const data = await response.arrayBuffer();
     const csv = new TextDecoder().decode(data);
     const rows = csv.split('\n');
-    const headers = rows[0].split(',') as Header[];
+    const headers = rows[0].split(',').map(x => x.trim()) as Header[];
     const datum = rows.slice(1).map(row => {
         const values = row.split(',');
         return headers.reduce((acc, header, index) => {
@@ -46,6 +46,12 @@ export async function getDailyData(date: Date) {
     }, [] as { total: number, diff: number, Day: number }[]).sort((a, b) => a.diff - b.diff).filter(x => x.total > 7000);
 
     const result =  monthData.filter(x => x.Day === monthDays[0].Day);
-    console.log(result);
+    // Compute these because I was too lazy to do it in Excel :|
+    const dailySAMOutput =  result.reduce((acc, y) => acc + y["SAM Model Output (kW)"] * 1000, 0);
+    result.forEach(x => {
+        x["SAM Model Output (W)"] = x["SAM Model Output (kW)"] * 1000;
+        x["SAM Daily Output (W)"] = dailySAMOutput;
+    });
+    // console.log(result);
     return result;
 }
