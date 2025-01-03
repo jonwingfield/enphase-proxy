@@ -167,7 +167,7 @@ export default function Summary() {
                 }
                 {globalState.source === "office" && officeProductionData &&
                     <div className={`${styles.statusModule} ${styles.powerwall}`} onClick={() => setIndividualVoltage(i => !i)} role="button">
-                        <h5>{formatWatt(-officeProductionData.batt_watts)} &middot; {formatWatt(-officeProductionData.batt_wh)}h</h5>
+                        <h5>{formatWatt(-officeProductionData.batt_watts)} &middot; {formatWatt(officeProductionData.batt_wh)}h</h5>
                         <h5>{Math.round(officeProductionData.batt_percent)}% &middot; {(officeProductionData.batt_v / (individualVoltage ? 4 : 1)).toFixed(2)}V</h5>
                         <small className={styles.small}>Powerwall</small>
                     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { WeatherData } from "@/service/weather";
-import { addDays, addMonths, parse } from "date-fns";
+import { addDays, addMonths, isBefore, isSameDay, parse, subDays } from "date-fns";
 import { createContext, Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
 
 export interface GlobalState {
@@ -13,21 +13,22 @@ export interface GlobalState {
     source: "home" | "office";
     batt_percent: number;
     teslaState: 'pluggedIn' | 'charging' | 'unplugged' | 'notHome';
-    billingCycleStartDate: string;
-    billingCycleDays: number;
+    billingCycleDates: string[];
 }
 
 const DefaultGlobalState: GlobalState = {
-    ratePerKWHUnder1000: 13.77,
-    ratePerKWHOver1000: 15.74,
+    // ratePerKWHUnder1000: 13.77,
+    // ratePerKWHOver1000: 15.74,
+    ratePerKWHUnder1000: 14.859,
+    ratePerKWHOver1000: 17.098,
     autoRefresh: true,
     weather: null,
     energyState: "idle",
     source: "home",
     batt_percent: 0,
     teslaState: 'unplugged',
-    billingCycleStartDate: "2024-11-28",
-    billingCycleDays: 30,
+    /** Must be sorted in ascending order */
+    billingCycleDates: ["2024-10-31", "2024-11-28", "2024-12-31", "2025-01-28"],
 };
 
 export const GlobalStateContext = createContext<{
@@ -70,14 +71,28 @@ export function calculateCost(globalState: GlobalState, totalInWh: number) {
     }
 }
 
-export function getBillingCycleStartDate(globalState: GlobalState, month: number, year: number) {
-    const configDate = parse(globalState.billingCycleStartDate, 'yyyy-MM-dd', new Date());
-    const billingCycleStartDate = new Date(year, month, configDate.getDate());
-    if (billingCycleStartDate.getTime() < new Date().setHours(0, 0, 0, 0)) {
-        return billingCycleStartDate;
-    } else {
-        return addMonths(billingCycleStartDate, -1);
+export function getBillingCycleStartDate(globalState: GlobalState, forDate: Date) {
+    const billingCycleDates = globalState.billingCycleDates.filter(billDate => isBefore(parse(billDate, 'yyyy-MM-dd', new Date()), forDate));
+    const lastBillingDateString = billingCycleDates.slice(-1)[0];
+    
+    if (lastBillingDateString === undefined) {
+        return [forDate, new Date()];
     }
+
+    const lastBillingDate = parse(lastBillingDateString, 'yyyy-MM-dd', new Date());
+
+    const nextBillingDateIndex = globalState.billingCycleDates.indexOf(lastBillingDateString) + 1;
+    if (nextBillingDateIndex >= globalState.billingCycleDates.length) {
+        return [lastBillingDate, new Date()];
+    }
+
+    const nextBillingDate = parse(globalState.billingCycleDates[nextBillingDateIndex], 'yyyy-MM-dd', new Date());
+
+    if (isBefore(new Date(), nextBillingDate)) {
+        return [lastBillingDate, new Date()];
+    }
+
+    return [lastBillingDate, subDays(nextBillingDate, 1)];
 }
 
 export function getBillingCycleEndDate(startDate: Date) {

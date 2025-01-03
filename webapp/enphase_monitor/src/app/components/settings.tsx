@@ -19,13 +19,13 @@ export default function Settings({ }: SettingsProps) {
             <label>Rate per kWh over 1000 kWh: </label>
             <input type="text" value={globalState.ratePerKWHOver1000} onChange={(e) => setGlobalState({ ...globalState, ratePerKWHOver1000: parseFloat(e.target.value) })} />
         </div>
-        <div className={styles.setting}>    
+        {/* <div className={styles.setting}>    
             <label>Billing Cycle Start Date: </label>
             <input type="date" value={globalState.billingCycleStartDate} onChange={(e) => setGlobalState({ ...globalState, billingCycleStartDate: e.target.value })} />
         </div>
         <div className={styles.setting}>    
             <label>Billing Cycle Days: </label>
             <input type="number" value={globalState.billingCycleDays} onChange={(e) => setGlobalState({ ...globalState, billingCycleDays: parseInt(e.target.value) })} />
-        </div>
+        </div> */}
     </div>;
 }

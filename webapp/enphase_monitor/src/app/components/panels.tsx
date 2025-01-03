@@ -301,7 +301,7 @@ export default function Panels({ autoRefresh = true, serialNumber }: { autoRefre
                 <p>{panelStats.wattHours} Wh  <em>({Math.round(panelStats.wattHours / 420.0 * 1000) / 1000} Wh/Watt)</em>. Max: {panelStats.maxWatts}W</p>
             }
 
-            <Chart data={chartData} defaultTimeRange="1h" />
+            <Chart data={chartData} defaultTimeRange="3h" />
 
             {detailedData &&
                 <>

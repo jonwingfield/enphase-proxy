@@ -106,11 +106,11 @@ export async function fetchComparisonFullDayData(date: Date): Promise<{ timestam
 } 
 
 
-export async function fetchMultiDayOfficeProductionData(numDays: number): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
+export async function fetchMultiDayOfficeProductionData(daysAgo: number, numDays: number): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
     const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
 
     const promises = [];
-    for (let i = numDays; i >= 0; i--) {
+    for (let i = daysAgo; i >= daysAgo - numDays; i--) {
         promises.push(fetchMaxDataForDay(new Date(midnightToday.getTime() - (i * 24 * 60 * 60 * 1000))));
     }
 

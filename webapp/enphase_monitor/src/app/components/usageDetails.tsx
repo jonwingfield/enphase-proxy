@@ -65,9 +65,9 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                     setChartType('line');
                 });
             } else if (timeRange === 'Billing Cycle') {
-                const billingStartDate = getBillingCycleStartDate(globalState, selectedDate.getMonth(), selectedDate.getFullYear());
+                const [billingStartDate, billingEndDate] = getBillingCycleStartDate(globalState, selectedDate);
                 const daysAgo = differenceInDays(new Date(), billingStartDate);
-                fetchMultiDayProductionData(daysAgo, 30).then(data => {
+                fetchMultiDayProductionData(daysAgo, differenceInDays(billingEndDate, billingStartDate)).then(data => {
                     setRooftopChartData({
                         series: [
                             { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
@@ -106,9 +106,9 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                     setChartType('line');
                 });
             } else if (timeRange === 'Billing Cycle') {
-                const billingStartDate = new Date(globalState.billingCycleStartDate + 'T08:00:00Z');
+                const [billingStartDate, billingEndDate] = getBillingCycleStartDate(globalState, selectedDate);
                 const daysAgo = differenceInDays(new Date(), billingStartDate);
-                fetchMultiDayOfficeProductionData(daysAgo).then(data => {
+                fetchMultiDayOfficeProductionData(daysAgo, differenceInDays(billingEndDate, billingStartDate)).then(data => {
                     setOfficeChartData({
                         series: [
                             { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
@@ -120,9 +120,9 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                 });
 
             } else if (timeRange === 'Month') {
-                const firstDayOfMonth = startOfMonth(new Date());
+                const firstDayOfMonth = startOfMonth(selectedDate);
                 const daysAgo = differenceInDays(new Date(), firstDayOfMonth);
-                fetchMultiDayOfficeProductionData(daysAgo).then(data => {
+                fetchMultiDayOfficeProductionData(daysAgo, differenceInDays(endOfMonth(selectedDate), firstDayOfMonth)).then(data => {
                     setOfficeChartData({
                         series: [
                             { title: "Production", color: ThemeColors.production, data: data.map(d => ({ timestamp: d.timestamp.getTime(), value: d.productionWatts })) },
@@ -144,7 +144,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                     setChartType('line');
                 });
             } else if (timeRange === 'Billing Cycle') {
-                const billingStartDate = new Date(globalState.billingCycleStartDate + 'T08:00:00Z');
+                const [billingStartDate] = getBillingCycleStartDate(globalState, selectedDate);
                 const daysAgo = differenceInDays(new Date(), billingStartDate);
                 fetchMultiDayBatteryData(daysAgo).then(data => {
                     setBatteryChartData({
@@ -153,7 +153,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                     setChartType('bar');
                 });
             } else if (timeRange === 'Month') {
-                const firstDayOfMonth = startOfMonth(new Date());
+                const firstDayOfMonth = startOfMonth(selectedDate);
                 const daysAgo = differenceInDays(new Date(), firstDayOfMonth);
                 fetchMultiDayBatteryData(daysAgo).then(data => {
                     setBatteryChartData({
