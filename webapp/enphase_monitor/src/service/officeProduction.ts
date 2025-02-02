@@ -27,7 +27,7 @@ export async function getOfficeProduction(): Promise<OfficeProductionData | null
         panel_wh: data.results[0].series[0].values[0][2] * 1000.0,
         load_watts: data.results[0].series[0].values[0][3],
         load_wh: data.results[0].series[0].values[0][4] * 1000.0,
-        batt_percent: data.results[0].series[0].values[0][5],
+        batt_percent: getPercentFromBattV(data.results[0].series[0].values[0][6]/4),
         batt_v: data.results[0].series[0].values[0][6],
         batt_watts: 0,
         batt_wh: 0,
@@ -103,7 +103,7 @@ export async function fetchComparisonFullDayData(date: Date): Promise<{ timestam
         productionWatts: point[1],
         consumptionWatts: point[2],
     }))[0] ?? undefined;
-} 
+}
 
 
 export async function fetchMultiDayOfficeProductionData(daysAgo: number, numDays: number): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
@@ -134,19 +134,19 @@ export async function fetchBatteryData(date: Date = new Date()): Promise<{ times
     }));
 }
 
-export async function fetchBatteryDataForDay(date: Date) { 
+export async function fetchBatteryDataForDay(date: Date) {
     const begin = new Date(new Date(date.getTime()).setHours(1, 0, 0));
     const end = new Date(new Date(date.getTime()).setHours(23, 59, 59));
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
         db: "solar",
-        q: `SELECT mean("batt_percent") as batt_percent 
+        q: `SELECT mean("batt_v") as batt_v
             FROM "energy"."infinite"."downsampled_energy" 
             WHERE time > '${begin.toISOString()}' and time < '${end.toISOString()}'`
     }));
     const data = await response.json();
     return data.results[0].series?.[0]?.values.map((point: [string, number, number, number]) => ({
         timestamp: new Date(point[0]),
-        value: point[1],
+        value: getPercentFromBattV(point[1]/4),
     })) ?? [];
 }
 
@@ -157,4 +157,18 @@ export async function fetchMultiDayBatteryData(numDays: number): Promise<{ times
         promises.push(fetchBatteryDataForDay(new Date(midnightToday.getTime() - (i * 24 * 60 * 60 * 1000))));
     }
     return (await Promise.all(promises)).flat();
+}
+
+const battVsByPercent = [4.122, 4.108, 4.098, 4.09, 4.085, 4.08, 4.076, 4.073, 4.069, 4.064, 4.058, 
+    4.052, 4.044, 4.036, 4.026, 4.016, 4.006, 3.995, 3.985, 3.974, 3.964, 3.954, 3.944, 3.935, 3.926, 
+    3.917, 3.909, 3.901, 3.893, 3.885, 3.877, 3.869, 3.861, 3.853, 3.844, 3.834, 3.825, 3.815, 3.805, 
+    3.794, 3.783, 3.772, 3.761, 3.75, 3.738, 3.727, 3.717, 3.706, 3.696, 3.686, 3.677, 3.668, 3.659, 
+    3.651, 3.644, 3.637, 3.63, 3.624, 3.618, 3.612, 3.606, 3.601, 3.595, 3.59, 3.584, 3.578, 3.573, 
+    3.567, 3.56, 3.554, 3.547, 3.54, 3.532, 3.524, 3.516, 3.507, 3.497, 3.487, 3.477, 3.466, 3.454, 
+    3.442, 3.429, 3.416, 3.403, 3.391, 3.378, 3.367, 3.356, 3.345, 3.335, 3.325, 3.315, 3.301, 3.282, 
+    3.254, 3.212, 3.146, 3.046, 2.898];
+
+function getPercentFromBattV(battV: number): number {
+    console.log(battV);
+    return 100-battVsByPercent.findIndex(v => v <= battV);
 }
