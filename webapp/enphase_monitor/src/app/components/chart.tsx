@@ -180,7 +180,7 @@ export default function Chart(props: ChartProps) {
                     datalabels: props.type === 'bar' ? {
                         anchor: 'end',
                         align: 'top',
-                        formatter: (value: any) => value.y > 1000 ? (value.y/1000).toFixed(1) : value.y.toFixed(0),
+                        formatter: (value: any) => value?.y ? (value.y > 1000 ? (value.y/1000).toFixed(1) : value.y.toFixed(0)) : '',
                         color: d.color,
                         offset: 0,
                         font: {
@@ -238,9 +238,10 @@ export default function Chart(props: ChartProps) {
         }
     }, [chartRef.current, data.series[0]?.data, highlightMode]);
 
-    const formatValue = useCallback((value: number, precision: number = 0) => {
+    const formatValue = useCallback((value: number, precision?: number, precisionKw?: number) => {
         return suffix === 'h' ? formatWatt(value, precision) + 'h' : 
-            (suffix ? (value.toFixed(2) + " "  + suffix) : formatWatt(value, precision));
+            (suffix ? (value.toFixed(2) + " "  + suffix) : formatWatt(value, 0, precisionKw));
+        
     }, [suffix]);
 
     const options = {
@@ -273,9 +274,9 @@ export default function Chart(props: ChartProps) {
                         const value = context.raw.y;
                         if (value) {
                             if (label.includes('Average')) {
-                                return `Average: ${formatValue(value, 2)}`;
+                                return `Average: ${formatValue(value, 0, 2)}`;
                             } else {
-                                return formatValue(value, 2);
+                                return formatValue(value, 0, 2);
                             }
                         }
                     }
@@ -318,7 +319,7 @@ export default function Chart(props: ChartProps) {
                 },
                 ticks: {
                     callback: function(value: any) {
-                        return formatValue(value);
+                        return formatValue(value, 0, 1);
                     },
                     color: '#aaaaaa'
                 }
