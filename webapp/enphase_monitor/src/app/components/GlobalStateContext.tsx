@@ -28,7 +28,7 @@ const DefaultGlobalState: GlobalState = {
     batt_percent: 0,
     teslaState: 'unplugged',
     /** Must be sorted in ascending order */
-    billingCycleDates: ["2024-10-31", "2024-11-28", "2024-12-31", "2025-01-28"],
+    billingCycleDates: ["2024-10-31", "2024-11-28", "2024-12-31", "2025-01-30", "2025-02-28", "2025-03-31", "2025-04-30", "2025-05-31", "2025-06-30", "2025-07-31", "2025-08-31", "2025-09-30", "2025-10-31", "2025-11-30", "2025-12-31"],
 };
 
 export const GlobalStateContext = createContext<{
