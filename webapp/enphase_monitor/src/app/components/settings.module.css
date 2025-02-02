@@ -2,6 +2,40 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
+    justify-content: flex-start;
+}
+
+.billingDates {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.billingDates h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.addButton {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.addButton:hover {
+    background-color: #45a049;
+}
+
+.cycleDays {
+    color: #666;
+    font-size: 0.9em;
+    min-width: 70px;
+    margin-left: 4px;
 }

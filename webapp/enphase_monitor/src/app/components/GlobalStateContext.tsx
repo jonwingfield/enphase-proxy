@@ -1,7 +1,7 @@
 "use client";
 
 import { WeatherData } from "@/service/weather";
-import { addDays, addMonths, isBefore, isSameDay, parse, subDays } from "date-fns";
+import { addDays, isBefore, parse, subDays, differenceInDays } from "date-fns";
 import { createContext, Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
 
 export interface GlobalState {
@@ -28,7 +28,7 @@ const DefaultGlobalState: GlobalState = {
     batt_percent: 0,
     teslaState: 'unplugged',
     /** Must be sorted in ascending order */
-    billingCycleDates: ["2024-10-31", "2024-11-28", "2024-12-31", "2025-01-30", "2025-02-28", "2025-03-31", "2025-04-30", "2025-05-31", "2025-06-30", "2025-07-31", "2025-08-31", "2025-09-30", "2025-10-31", "2025-11-30", "2025-12-31"],
+    billingCycleDates: ["2024-10-31", "2024-11-28", "2024-12-31", "2025-01-31", "2025-02-28", "2025-03-31", "2025-04-30", "2025-05-31", "2025-06-30", "2025-07-31", "2025-08-31", "2025-09-30", "2025-10-31", "2025-11-30", "2025-12-31"],
 };
 
 export const GlobalStateContext = createContext<{
@@ -98,4 +98,13 @@ export function getBillingCycleStartDate(globalState: GlobalState, forDate: Date
 export function getBillingCycleEndDate(startDate: Date) {
     const billingCycleEndDate = addDays(startDate, 30);
     return billingCycleEndDate;
+}
+
+export function getBillingCycleDays(billingCycleDates: string[], endDateIndex: number) {
+    if (endDateIndex > billingCycleDates.length - 1 || endDateIndex < 1) return null;
+    
+    const currentDate = parse(billingCycleDates[endDateIndex - 1], 'yyyy-MM-dd', new Date());
+    const nextDate = parse(billingCycleDates[endDateIndex], 'yyyy-MM-dd', new Date());
+    
+    return differenceInDays(nextDate, currentDate);
 }
