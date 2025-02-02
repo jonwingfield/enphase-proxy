@@ -14,6 +14,10 @@
     background-color: #f9f9f9;
 }
 
+.dateInput {
+    min-width: 120px;
+}
+
 .billingDates h3 {
     margin-top: 0;
     margin-bottom: 15px;

@@ -11,6 +11,14 @@ export default function Settings({ }: SettingsProps) {
     const { globalState, setGlobalState } = useGlobalState();
 
     const handleDateChange = (index: number, newDate: string) => {
+        const prevDate = index > 0 ? parse(globalState.billingCycleDates[index - 1], 'yyyy-MM-dd', new Date()) : null;
+        const nextDate = index < globalState.billingCycleDates.length - 1 ? parse(globalState.billingCycleDates[index + 1], 'yyyy-MM-dd', new Date()) : null;
+        const newDateObj = parse(newDate, 'yyyy-MM-dd', new Date());
+
+        if ((prevDate && newDateObj <= prevDate) || (nextDate && newDateObj >= nextDate)) {
+            return; // Invalid date, don't update
+        }
+
         const newDates = [...globalState.billingCycleDates];
         newDates[index] = newDate;
         setGlobalState({ ...globalState, billingCycleDates: newDates });
@@ -45,6 +53,7 @@ export default function Settings({ }: SettingsProps) {
                 <div key={index} className={styles.setting}>
                     <input 
                         type="date" 
+                        className={styles.dateInput}
                         value={date}
                         onChange={(e) => handleDateChange(index, e.target.value)}
                     />
