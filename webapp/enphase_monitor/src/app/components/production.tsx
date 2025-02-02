@@ -60,6 +60,16 @@ export default function Production({ autoRefresh = true, ratePerKWHUnder1000, ra
         }
     }, [autoRefresh, productionData]);
 
+    useEffect(() => {
+        if (autoRefresh) {
+            setTimeout(() => {
+                fetchComparisonFullDayData(comparisonDate).then(data => {
+                    setComparisonFullDayData(data);
+                });
+            }, 60 * 1000);
+        }
+    }, [comparisonDate, autoRefresh, comparisonFullDayData]);
+
     const updateProductionData = useCallback(() => {
         if (!autoRefreshRef.current) {
             return;
