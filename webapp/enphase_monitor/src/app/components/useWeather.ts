@@ -25,5 +25,5 @@ export function useWeather() {
 }
 
 export function isWeatherAlert(weather: WeatherData) {
-    return weather.tempf < 52 || weather.tempf > 93;
+    return weather.tempf < 50.5 || weather.tempf > 93;
 }
