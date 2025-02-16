@@ -7,7 +7,7 @@ import { formatWatt, HomeProductionData } from "./useProduction";
 import Chart from "./chart";
 import { fetchBatteryData, fetchMaxDataForDay as fetchMaxOfficeDataForDay, fetchMultiDayBatteryData, fetchMultiDayOfficeProductionData, getLast12HoursOfficeProduction, OfficeProductionData } from "@/service/officeProduction";
 import { SubNavBar } from "./navBar";
-import { calculateCost, getBillingCycleStartDate, useGlobalState } from "./GlobalStateContext";
+import { calculateCost, getBillingCycleStartDate, getBillingRate, useGlobalState } from "./GlobalStateContext";
 import { differenceInDays, endOfMonth, isToday, startOfMonth } from "date-fns";
 import { ThemeColors } from "../theme";
 import DateSelection from "./dateSelection";
@@ -49,7 +49,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
     const [dailyData] = useAsyncState(() => 
         enableDailyData !== 'none' ? getDailyData(selectedDate) : Promise.resolve(undefined), 
     [selectedDate, enableDailyData]);
-
+    
     const fetchData = (type: 'home' | 'office' | 'battery') => {   
         if (type === 'home') {
             if (timeRange === 'Day') {
@@ -228,7 +228,7 @@ export function UsageDetails({ productionData }: UsageDetailsProps) {
                             </div>
                             {productionData &&
                                 <div>
-                                    {source === 'solar' && <h4>{formatWatt(total)}h &middot; ${((globalState.ratePerKWHOver1000 / 100) * total / 1000 ).toFixed(2)}</h4>}
+                                    {source === 'solar' && <h4>{formatWatt(total)}h &middot; ${((getBillingRate(globalState, selectedDate).ratePerKWHOver1000 / 100) * total / 1000 ).toFixed(2)}</h4>}
                                     {source !== 'solar' && source !== 'battery' && <h4>{formatWatt(total)}h &middot; ${calculateCost(globalState, total)}</h4>}
                                     {source === 'battery' && 'batt_percent' in productionData && <h4>{productionData.batt_percent.toFixed(0)}% &middot; {(productionData.batt_v.toFixed(2))}V</h4>}
                                 </div>

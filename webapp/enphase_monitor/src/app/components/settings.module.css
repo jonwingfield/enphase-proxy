@@ -1,9 +1,16 @@
 .setting {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     justify-content: flex-start;
+    flex-wrap: wrap;
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+.setting:last-child {
+    border-bottom: none;
 }
 
 .billingDates {
@@ -42,4 +49,42 @@
     font-size: 0.9em;
     min-width: 70px;
     margin-left: 4px;
+}
+
+.addRatesButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 1rem;
+}
+
+.addRatesButton:hover {
+    color: #4CAF50;
+}
+
+.rateInputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0;
+    margin-left: 1rem;
+    width: 100%;
+}
+
+.rateInputs label {
+    display: grid;
+    grid-template-columns: auto auto;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 4px 0;
+}
+
+.rateInputs input {
+    width: 80px;
+    justify-self: start;
 }

@@ -1,6 +1,6 @@
 "use client";
 import Production from "../components/production";
-import { useGlobalState } from "../components/GlobalStateContext";
+import { getBillingRate, useGlobalState } from "../components/GlobalStateContext";
 import styles from "./production.module.css";
 import { NavBar } from "../components/navBar";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,7 @@ export default function ProductionPage() {
         </div>
         <div className={styles.content}>
             <Production autoRefresh={globalState.autoRefresh} visible
-                ratePerKWHUnder1000={globalState.ratePerKWHUnder1000} ratePerKWHOver1000={globalState.ratePerKWHOver1000} />
+                ratePerKWHUnder1000={getBillingRate(globalState).ratePerKWHUnder1000} ratePerKWHOver1000={getBillingRate(globalState).ratePerKWHOver1000} />
         </div>
     </div>;
 }

@@ -62,6 +62,9 @@ export default function RootLayout({
                         <Link href="/panels">Panels</Link>
                     </div>
                     <div>
+                        <Link href="/payback">Payback</Link>
+                    </div>
+                    <div>
                         <Link href="/settings">Settings</Link>
                     </div>
                 </footer>

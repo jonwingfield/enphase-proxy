@@ -24,7 +24,7 @@ export async function getPvWattsDataClient(date: Date): Promise<any> {
 const headers = ['Month', 'Day', 'Hour', 'Beam Irradiance (W/m^2)', 'Diffuse Irradiance (W/m^2)', 'Total Irr', 'Ambient Temperature (C)', 'Wind Speed (m/s)', 'Plane of Array Irradiance (W/m^2)', 'Cell Temperature (C)', 'DC Array Output (W)', 'AC System Output (W)', 'Including Shade', 'Scaled For System', 'Better Shade Calc', 'Scaled 2', 'Diff', 'Ideal', 'Shaded Daily Output (W)', 'Ideal Daily Output (W)', 'Percentage', 'SAM Model Output (kW)', 'SAM Model Output (W)', 'SAM Daily Output (W)'] as const;
 export type Header = typeof headers[number];
 
-export async function getDailyData(date: Date) {
+export async function getAllCsvData() {
     const response = await fetch('/pvwatts_1kw_east.csv');
     const data = await response.arrayBuffer();
     const csv = new TextDecoder().decode(data);
@@ -37,13 +37,19 @@ export async function getDailyData(date: Date) {
             return acc;
         }, {} as { [key in Header]: number });
     });
+    return datum;
+}
+
+export async function getDailyData(date: Date) {
+    const datum = await getAllCsvData();
 
     const monthData = datum.filter(x => x.Month === date.getMonth() + 1);
     const monthDays = monthData.reduce((acc, x) => {
         acc[x.Day-1] = acc[x.Day-1] || { total: 0, diff: Math.abs(x.Day - date.getDate()), Day: x.Day };
-        acc[x.Day-1].total += x["Beam Irradiance (W/m^2)"];
+        acc[x.Day-1].total += x["SAM Model Output (kW)"] * 1000;
         return acc;
-    }, [] as { total: number, diff: number, Day: number }[]).sort((a, b) => a.diff - b.diff).filter(x => x.total > 7000);
+    // sort by total, but penalize for days further away from the target
+    }, [] as { total: number, diff: number, Day: number }[]).sort((a, b) => Math.max(10-b.diff, 1) * b.total - Math.max(10-a.diff, 1) * a.total);
 
     const result =  monthData.filter(x => x.Day === monthDays[0].Day);
     // Compute these because I was too lazy to do it in Excel :|
@@ -54,4 +60,16 @@ export async function getDailyData(date: Date) {
     });
     // console.log(result);
     return result;
+}
+
+export async function getDailySAMData() {
+    const datum = await getAllCsvData();
+    const monthDays = datum.reduce((acc, row) => {
+        // Use the same indexing as JS Date
+        acc[row.Month-1] = acc[row.Month-1] || [];
+        acc[row.Month-1][row.Day] = acc[row.Month-1][row.Day] || 0;
+        acc[row.Month-1][row.Day] += row["SAM Model Output (kW)"] * 1000;
+        return acc;
+    }, {} as { [month: number]: { [day: number]: number } }); 
+    return monthDays;
 }
