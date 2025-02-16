@@ -17,6 +17,38 @@ interface MonthlyData {
     actualValue: number;
 }
 
+const TOTAL_INVESTMENT = 16000;
+
+interface PaybackSummaryProps {
+    monthlyData: MonthlyData[];
+}
+
+function PaybackSummary({ monthlyData }: PaybackSummaryProps) {
+    const totalPayback = useMemo(() => {
+        const completedMonths = monthlyData.filter(month => month.actualProduction > 0);
+        return completedMonths.reduce((sum, month) => sum + month.actualValue, 0);
+    }, [monthlyData]);
+
+    const paybackPercentage = (totalPayback / TOTAL_INVESTMENT) * 100;
+
+    return (
+        <div className={styles.paybackSummary}>
+            <div className={styles.paybackAmount}>
+                ${totalPayback.toFixed(2)} paid back
+            </div>
+            <div className={styles.progressBarContainer}>
+                <div 
+                    className={styles.progressBar} 
+                    style={{ width: `${Math.min(paybackPercentage, 100)}%` }}
+                />
+                <div className={styles.progressText}>
+                    {paybackPercentage.toFixed(1)}% of ${TOTAL_INVESTMENT.toLocaleString()}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Payback() {
     const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
     const [displayMode, setDisplayMode] = useState<'energy' | 'savings'>('energy');
@@ -89,6 +121,7 @@ export default function Payback() {
                 <NavBar title="Payback Analysis" backClicked={() => router.back()} />
             </div>
             <div className={styles.content}>
+                <PaybackSummary monthlyData={monthlyData} />
                 <SubNavBar 
                     items={displayModes} 
                     selectedItem={displayMode === 'energy' ? 'Energy Generated' : 'Savings'} 
