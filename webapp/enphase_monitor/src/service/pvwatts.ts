@@ -62,7 +62,9 @@ export async function getDailyData(date: Date) {
     return result;
 }
 
-export async function getDailySAMData() {
+export type DailySAMData = { [month: number]: { [day: number]: number } };
+
+export async function getDailySAMData(): Promise<DailySAMData> {
     const datum = await getAllCsvData();
     const monthDays = datum.reduce((acc, row) => {
         // Use the same indexing as JS Date

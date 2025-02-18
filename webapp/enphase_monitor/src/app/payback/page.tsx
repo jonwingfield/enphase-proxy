@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useMemo, Fragment } from 'react';
-import { getDailySAMData } from '@/service/pvwatts';
+import { DailySAMData, getDailySAMData } from '@/service/pvwatts';
 import { fetchMultiDayProductionData } from '@/service/enphaseProduction';
 import styles from './payback.module.css';
 import { parse } from 'date-fns';
@@ -20,21 +20,49 @@ interface MonthlyData {
 const TOTAL_INVESTMENT = 16000;
 
 interface PaybackSummaryProps {
+    projectedData: DailySAMData | null;
     monthlyData: MonthlyData[];
 }
 
-function PaybackSummary({ monthlyData }: PaybackSummaryProps) {
+function PaybackSummary({ projectedData, monthlyData }: PaybackSummaryProps) {
+    const { globalState } = useGlobalState();
     const totalPayback = useMemo(() => {
         const completedMonths = monthlyData.filter(month => month.actualProduction > 0);
         return completedMonths.reduce((sum, month) => sum + month.actualValue, 0);
     }, [monthlyData]);
+
+    const monthsRemaining = useMemo(() => {
+        if (!projectedData) {
+            return 0;
+        }
+
+        let currentMonth = new Date().getMonth() + 1; // 0-indexed
+        let currentYear = new Date().getFullYear();
+        let remainingPayback = TOTAL_INVESTMENT - totalPayback;
+        let monthsRemaining = 0;
+
+        while (remainingPayback > 0) {
+            const billingRatePerKwhInCents = getBillingRate(globalState, new Date(currentYear, currentMonth, 1)).ratePerKWHOver1000/100;
+            const projectedUsageKwh = Object.values(projectedData[currentMonth]).reduce((sum, day) => sum + day, 0) / 1000;
+            const monthValue = billingRatePerKwhInCents * projectedUsageKwh;
+            remainingPayback -= monthValue;
+            monthsRemaining++;
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+        }
+
+        return monthsRemaining;
+    }, [projectedData, totalPayback]);
 
     const paybackPercentage = (totalPayback / TOTAL_INVESTMENT) * 100;
 
     return (
         <div className={styles.paybackSummary}>
             <div className={styles.paybackAmount}>
-                ${totalPayback.toFixed(2)} paid back
+                ${totalPayback.toFixed(2)} paid back.<br /><small>{Math.floor(monthsRemaining/12)} years, {monthsRemaining%12} months remaining.</small>
             </div>
             <div className={styles.progressBarContainer}>
                 <div 
@@ -51,13 +79,15 @@ function PaybackSummary({ monthlyData }: PaybackSummaryProps) {
 
 export default function Payback() {
     const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
-    const [displayMode, setDisplayMode] = useState<'energy' | 'savings'>('energy');
+    const [displayMode, setDisplayMode] = useState<'energy' | 'savings'>('savings');
+    const [projectedData, setProjectedData] = useState<DailySAMData | null>(null);
     const { globalState } = useGlobalState();
     const router = useRouter();
 
     useEffect(() => {
         async function fetchData() {
             const projectedData = await getDailySAMData();
+            setProjectedData(projectedData);
             const actualData = await fetchMultiDayProductionData(365, 365);
             const monthlyTotals: { [key: string]: MonthlyData } = {};
 
@@ -113,7 +143,7 @@ export default function Payback() {
         fetchData();
     }, []);
 
-    const displayModes = ['Energy Generated', 'Savings'];
+    const displayModes = ['Savings', 'Energy Generated'];
 
     return (
         <div className={styles.container}>
@@ -121,7 +151,7 @@ export default function Payback() {
                 <NavBar title="Payback Analysis" backClicked={() => router.back()} />
             </div>
             <div className={styles.content}>
-                <PaybackSummary monthlyData={monthlyData} />
+                <PaybackSummary projectedData={projectedData} monthlyData={monthlyData} />
                 <SubNavBar 
                     items={displayModes} 
                     selectedItem={displayMode === 'energy' ? 'Energy Generated' : 'Savings'} 
