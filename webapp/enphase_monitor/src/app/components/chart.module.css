@@ -26,15 +26,22 @@
     gap: 4px;
 }
 
+.separator {
+    width: 1px;
+    background-color: var(--gray-alpha-200);
+    margin: 4px 4px;
+}
+
 .chartButton {
     border-radius: 20px;
     padding: 8px 0px;
-    width: 35px;
+    min-width: 35px;
     border: 0;
     color: var(--gray-alpha-500);
     background: transparent;
     transition: all 0.2s ease;
     cursor: pointer;
+    font-size: 16px;
 }
 
 .selected {

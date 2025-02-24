@@ -107,6 +107,9 @@ function triggerTooltip(chart: any, index: number, datasetIndices: number[]) {
 type ChartTimeRange = "1h" | "2h" | "3h" | "6h" | "12h" | "Day" | "All";
 const ChartTimeRanges: ChartTimeRange[] = ["1h", "2h", "3h", "6h", "12h", "Day", "All"];
 
+// Add this type near the ChartTimeRange type
+type ChartMode = 'normal' | 'cumulative';
+
 type ChartProps = { 
     data: ChartData,    
     defaultTimeRange?: ChartTimeRange, 
@@ -122,6 +125,7 @@ export default function Chart(props: ChartProps) {
     const { data, highlightMode, suffix } = props;
     const [chartTimeRange, setChartTimeRange] = useState<ChartTimeRange>(props.defaultTimeRange || "6h");
     const [clearedSeries, setClearedSeries] = useState<string[]>(props.data.series.filter(s => s.hiddenByDefault).map(s => s.title));
+    const [chartMode, setChartMode] = useState<ChartMode>('normal');
 
     const showAllData = useMemo(() => props.defaultTimeRange === 'All', [props.defaultTimeRange]);
 
@@ -164,11 +168,33 @@ export default function Chart(props: ChartProps) {
     }, [filteredData]);
 
     const chartData = useMemo(() => {
+        // Transform data to cumulative if in cumulative mode
+        const transformData = (data: { x: Date, y: number }[]) => {
+            if (chartMode === 'cumulative' && props.type === 'line') {
+                let sum = 0;
+                return data.map((point, i) => {
+                    if (i === 0) {
+                        return { x: point.x, y: 0 };
+                    }
+                    const prevPoint = data[i - 1];
+                    const hoursDiff = (point.x.getTime() - prevPoint.x.getTime()) / (1000 * 60 * 60);
+                    // Average watts between readings * hours = watt-hours, divide by 1000 for kWh
+                    const kWh = ((point.y + prevPoint.y) / 2 * hoursDiff);
+                    sum += kWh;
+                    return {
+                        x: point.x,
+                        y: sum
+                    };
+                });
+            }
+            return data;
+        };
+
         return {
             datasets: [
                 ...filteredData.map((d, i) => ({
                     label: d.title,
-                    data: d.data.map(d => ({ x: new Date(d.timestamp), y: d.value })),
+                    data: transformData(d.data.map(d => ({ x: new Date(d.timestamp), y: d.value }))),
                     fill: i === 0,
                     borderColor: d.color,
                     backgroundColor: `${d.color}33`, // Add 33 for 20% opacity
@@ -226,7 +252,7 @@ export default function Chart(props: ChartProps) {
                 }] : [])
             ]
         };
-    }, [filteredData, averages, props.hideAverages, props.barData]);
+    }, [filteredData, averages, props.hideAverages, props.barData, chartMode]);
 
     useLayoutEffect(() => {
         if (chartRef.current && chartData.datasets[0]?.data.length > 0 && highlightMode) {
@@ -239,7 +265,7 @@ export default function Chart(props: ChartProps) {
     }, [chartRef.current, data.series[0]?.data, highlightMode]);
 
     const formatValue = useCallback((value: number, precision?: number, precisionKw?: number) => {
-        return suffix === 'h' ? formatWatt(value, precision) + 'h' : 
+        return suffix === 'h' ? formatWatt(value, precision, precisionKw) + 'h' : 
             (suffix ? (value.toFixed(2) + " "  + suffix) : formatWatt(value, 0, precisionKw));
         
     }, [suffix]);
@@ -380,8 +406,22 @@ export default function Chart(props: ChartProps) {
 
             {!props.hideTimeRange && <div className={styles.chartTimeRange}>
                 {ChartTimeRanges.filter(range => range !== 'All').map(range => (
-                    <button key={range} className={(chartTimeRange === range ? styles.selected : "") + " " + styles.chartButton} onClick={() => setChartTimeRange(range)}>{range}</button>
+                    <button 
+                        key={range} 
+                        className={(chartTimeRange === range ? styles.selected : "") + " " + styles.chartButton} 
+                        onClick={() => setChartTimeRange(range)}
+                    >
+                        {range}
+                    </button>
                 ))}
+                <div className={styles.separator} />
+                <button 
+                    className={(chartMode === 'cumulative' ? styles.selected : "") + " " + styles.chartButton} 
+                    onClick={() => setChartMode(chartMode === 'normal' ? 'cumulative' : 'normal')}
+                    title="Cumulative Mode"
+                >
+                    ∫
+                </button>
             </div>}
         </div>
     );
