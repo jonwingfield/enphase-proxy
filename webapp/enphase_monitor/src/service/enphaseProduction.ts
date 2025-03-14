@@ -1,6 +1,7 @@
 import { ThemeColors } from "@/app/theme";
 import { OverridableComponent } from "@mui/material/OverridableComponent";
 import { SvgIconTypeMap } from "@mui/material/SvgIcon";
+import { startOfToday, subDays } from "date-fns";
 
 export interface EnphaseProductionData {
     production: {
@@ -101,7 +102,8 @@ async function fetchTodayProductionData(date: Date = new Date(), fill: "previous
 }
 
 export async function fetchMaxDataForDay(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number }[]> {
-    const begin = new Date(new Date(date.getTime()).setHours(1, 0, 0));
+    const isDaylightSaving = date.getTimezoneOffset() !== 0;
+    const begin = new Date(new Date(date.getTime()).setHours(isDaylightSaving ? 2 : 1, 0, 0));
     const end = new Date(new Date(date.getTime()).setHours(23, 59, 59));
     const response = await fetch("/influxdb/query?" + new URLSearchParams({
         db: "solar",
@@ -127,18 +129,19 @@ async function fetchMultiDayProductionData(daysAgo: number, numDays: number): Pr
         numDays = daysAgo;
     }
 
-    const midnightToday = new Date(new Date().setHours(0, 0, 0, 0));
+    const midnightToday = startOfToday();
 
     const promises = [];
     for (let i = daysAgo; i >= daysAgo - numDays; i--) {
-        promises.push(fetchMaxDataForDay(new Date(midnightToday.getTime() - (i * 24 * 60 * 60 * 1000))));
+        promises.push(fetchMaxDataForDay(subDays(midnightToday, i)));
     }
 
     return (await Promise.all(promises)).flat();
 }
 
 async function fetchComparisonFullDayData(date: Date): Promise<{ timestamp: Date, productionWatts: number, consumptionWatts: number } | undefined> {
-    const oneAmOnDate = new Date(new Date(new Date(date).setHours(1, 0, 0, 0)));
+    const isDaylightSaving = date.getTimezoneOffset() !== 0;
+    const oneAmOnDate = new Date(new Date(new Date(date).setHours(isDaylightSaving ? 2 : 1, 0, 0, 0)));
     const currentTimeOnDate = new Date(new Date(oneAmOnDate).setHours(new Date().getHours(), new Date().getMinutes()));
 
     const response = await fetch("/influxdb/query?" + new URLSearchParams({

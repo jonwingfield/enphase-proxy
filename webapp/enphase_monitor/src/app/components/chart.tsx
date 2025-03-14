@@ -206,7 +206,7 @@ export default function Chart(props: ChartProps) {
                     datalabels: props.type === 'bar' ? {
                         anchor: 'end',
                         align: 'top',
-                        formatter: (value: any) => value?.y ? (value.y > 1000 ? (value.y/1000).toFixed(1) : value.y.toFixed(0)) : '',
+                        formatter: (value: any) => value?.y ? formatWatt(value.y, 0, 1).replace(/[kW ]/g, '') : '',
                         color: d.color,
                         offset: 0,
                         font: {
